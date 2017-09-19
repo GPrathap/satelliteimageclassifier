@@ -14,6 +14,10 @@ import numpy as np
 import skimage.transform
 import rasterio
 import shapely.wkt
+from PIL import Image
+import numpy as np
+import skimage.io as io
+import tensorflow as tf
 
 # Logger
 warnings.simplefilter("ignore", UserWarning)
@@ -60,14 +64,136 @@ class DataProcessor():
         self.FMT_TEST_IMAGELIST_PATH = self.IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
         self.FMT_TEST_IM_STORE = self.IMAGE_DIR + "/test_{}_im.h5"
         self.FMT_TEST_MUL_STORE = self.IMAGE_DIR + "/test_{}_mul.h5"
+
         self.handler = StreamHandler()
         self.handler.setLevel(INFO)
         self.handler.setFormatter(Formatter('%(asctime)s %(levelname)s %(message)s'))
         self.logger = getLogger('spacenet')
         self.logger.setLevel(INFO)
         np.random.seed(1145141919)
+        self.LOGFORMAT = '%(asctime)s %(levelname)s %(message)s'
+        self.BASE_DIR = "/data/train"
+        self.MODEL_DIR = "/data/working/models/{}".format(self.MODEL_NAME)
+        self.FN_SOLUTION_CSV = "/data/output/{}.csv".format(self.MODEL_NAME)
+
+        # Parameters
+        self.MIN_POLYGON_AREA = 30
+
+        # Input files
+        self.FMT_TRAIN_SUMMARY_PATH_V5 = str(
+            Path(self.BASE_DIR) /
+            Path("{prefix:s}_Train/") /
+            Path("summaryData/{prefix:s}_Train_Building_Solutions.csv"))
+        self.FMT_TRAIN_RGB_IMAGE_PATH_V5 = str(
+            Path(self.BASE_DIR) /
+            Path("{prefix:s}_Train/") /
+            Path("RGB-PanSharpen/RGB-PanSharpen_{image_id:s}.tif"))
+        self.FMT_TEST_RGB_IMAGE_PATH_V5 = str(
+            Path(self.BASE_DIR) /
+            Path("{prefix:s}_Test_public/") /
+            Path("RGB-PanSharpen/RGB-PanSharpen_{image_id:s}.tif"))
+        self.FMT_TRAIN_MSPEC_IMAGE_PATH_V5 = str(
+            Path(self.BASE_DIR) /
+            Path("{prefix:s}_Train/") /
+            Path("MUL-PanSharpen/MUL-PanSharpen_{image_id:s}.tif"))
+        self.FMT_TEST_MSPEC_IMAGE_PATH_V5 = str(
+            Path(self.BASE_DIR) /
+            Path("{prefix:s}_Test_public/") /
+            Path("MUL-PanSharpen/MUL-PanSharpen_{image_id:s}.tif"))
+
+        self.FMT_BANDCUT_TH_PATH = self.IMAGE_DIR + "/bandcut{}.csv"
+        self.FMT_MUL_BANDCUT_TH_PATH = self.IMAGE_DIR + "/mul_bandcut{}.csv"
+        self.tfrecords_filename_rgb = self.IMAGE_DIR + '/rgb_segmentation.tfrecords'
+        self.tfrecords_filename_multi = self.IMAGE_DIR + '/multi_segmentation.tfrecords'
+        # self.writer_rgb = tf.python_io.TFRecordWriter(self.tfrecords_filename_rgb)
+        self.writer_multi = tf.python_io.TFRecordWriter(self.tfrecords_filename_multi)
+
         with open(plugin_config) as plugin_config:
             self.plugin_config = json.load(plugin_config)
+
+    def createRFRecoad(self, img, annotation, writer):
+        height = img.shape[0]
+        width = img.shape[1]
+        channels = img.shape[2]
+        mask_height = annotation.shape[0]
+        mask_width = annotation.shape[1]
+        mask_channels = 1
+
+        img_raw = img.tostring()
+        annotation_raw = annotation.tostring()
+        example = tf.train.Example(features=tf.train.Features(feature={
+            'image_height': self._int64_feature(height),
+            'image_width': self._int64_feature(width),
+            'channels': self._int64_feature(channels),
+            'mask_height': self._int64_feature(mask_height),
+            'mask_width': self._int64_feature(mask_width),
+            'mask_channels': self._int64_feature(mask_channels),
+            'image_raw': self._bytes_feature(img_raw),
+            'mask_raw': self._bytes_feature(annotation_raw)}))
+        writer.write(example.SerializeToString())
+
+    def read_and_decode(self, filename, numberOfChannels):
+        filename_queue = tf.train.string_input_producer([filename], num_epochs=1)
+        reader = tf.TFRecordReader()
+        _, serialized_example = reader.read(filename_queue)
+        features = tf.parse_single_example(
+            serialized_example,
+            # Defaults are not specified since both keys are required.
+            features={
+                'image_height': tf.FixedLenFeature([], tf.int64),
+                'image_width': tf.FixedLenFeature([], tf.int64),
+                'channels': tf.FixedLenFeature([], tf.int64),
+                'mask_height': tf.FixedLenFeature([], tf.int64),
+                'mask_width': tf.FixedLenFeature([], tf.int64),
+                'mask_channels': tf.FixedLenFeature([], tf.int64),
+                'image_raw': tf.FixedLenFeature([], tf.string),
+                'mask_raw': tf.FixedLenFeature([], tf.string)
+            })
+
+        # Convert from a scalar string tensor (whose single string has
+        # length mnist.IMAGE_PIXELS) to a uint8 tensor with shape
+        # [mnist.IMAGE_PIXELS].
+        image = tf.decode_raw(features['image_raw'], tf.uint8)
+        annotation = tf.decode_raw(features['mask_raw'], tf.uint8)
+
+        height = tf.cast(features['image_height'], tf.int32)
+        width = tf.cast(features['image_width'], tf.int32)
+        channels = tf.cast(features['channels'], tf.int32)
+
+        print (channels)
+
+        mask_height = tf.cast(features['mask_height'], tf.int32)
+        mask_width = tf.cast(features['mask_width'], tf.int32)
+        mask_channels = tf.cast(features['mask_channels'], tf.int32)
+
+        image_shape = tf.stack([height, width, numberOfChannels])
+        annotation_shape = tf.stack([mask_height, mask_width, 1])
+
+        image = tf.reshape(image, image_shape)
+        annotation = tf.reshape(annotation, annotation_shape)
+
+        # image_size_const = tf.constant((self.INPUT_SIZE, self.INPUT_SIZE, 3), dtype=tf.int32)
+        # annotation_size_const = tf.constant((self.INPUT_SIZE, self.INPUT_SIZE, 1), dtype=tf.int32)
+
+        # Random transformations can be put here: right before you crop images
+        # to predefined size. To get more information look at the stackoverflow
+        # question linked above.
+
+        resized_image = tf.image.resize_image_with_crop_or_pad(image=image,
+                                                               target_height=self.INPUT_SIZE,
+                                                               target_width=self.INPUT_SIZE)
+
+        resized_annotation = tf.image.resize_image_with_crop_or_pad(image=annotation,
+                                                                    target_height=self.INPUT_SIZE,
+                                                                    target_width=self.INPUT_SIZE)
+
+        images, annotations = tf.train.shuffle_batch([resized_image, resized_annotation],
+                                                      batch_size=1,
+                                                      capacity=30,
+                                                      num_threads=1,
+                                                      min_after_dequeue=1)
+
+        return images, annotations
 
     def directory_name_to_area_id(self, datapath):
         dir_name = Path(datapath).name
@@ -81,6 +207,12 @@ class DataProcessor():
             return 5
         else:
             raise RuntimeError("Unsupported city id is given.")
+
+    def _bytes_feature(self, value):
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+    def _int64_feature(self, value):
+        return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
     def calc_rgb_multiband_cut_threshold(self, area_id, datapath):
         rows = []
@@ -581,6 +713,17 @@ class DataProcessor():
                                  filters=filters)
             ds[:] = X_mean
 
+    def _remove_interiors(delf, line):
+        if "), (" in line:
+            line_prefix = line.split('), (')[0]
+            line_terminate = line.split('))",')[-1]
+            line = (
+                line_prefix +
+                '))",' +
+                line_terminate
+            )
+        return line
+
     def prep_mulmean(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
         X_train = []
@@ -732,14 +875,116 @@ class DataProcessor():
 
             self.logger.info("preproc_test for {} ... done".format(prefix))
 
+    def _get_valtest_mul_data(self, area_id):
+        prefix = self.area_id_to_prefix(area_id)
+        fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_test = pd.read_csv(fn_test)
+
+        X_val = []
+        fn_im = self.FMT_VALTEST_MUL_STORE.format(prefix)
+        with tb.open_file(fn_im, 'r') as f:
+            for idx, image_id in enumerate(df_test.ImageId.tolist()):
+                im = np.array(f.get_node('/' + image_id))
+                im = np.swapaxes(im, 0, 2)
+                im = np.swapaxes(im, 1, 2)
+                X_val.append(im)
+        X_val = np.array(X_val)
+
+        y_val = []
+        fn_mask = self.FMT_VALTEST_MASK_STORE.format(prefix)
+        with tb.open_file(fn_mask, 'r') as f:
+            for idx, image_id in enumerate(df_test.ImageId.tolist()):
+                mask = np.array(f.get_node('/' + image_id))
+                mask = (mask > 0.5).astype(np.uint8)
+                y_val.append(mask)
+        y_val = np.array(y_val)
+        y_val = y_val.reshape((-1, 1, self.INPUT_SIZE, self.INPUT_SIZE))
+
+        return X_val, y_val
+
+
+
+
+    def _get_valtrain_mul_data(self, area_id, writer):
+        prefix = self.area_id_to_prefix(area_id)
+        fn_train = self.FMT_VALTRAIN_IMAGELIST_PATH.format(prefix=prefix)
+        df_train = pd.read_csv(fn_train)
+        fn_im = self.FMT_VALTRAIN_MUL_STORE.format(prefix)
+        fn_mask = self.FMT_VALTRAIN_MASK_STORE.format(prefix)
+        with tb.open_file(fn_im, 'r') as f:
+            with tb.open_file(fn_mask, 'r') as af:
+                for idx, image_id in enumerate(df_train.ImageId.tolist()):
+                    im = np.array(f.get_node('/' + image_id))
+                    im = np.swapaxes(im, 0, 2)
+                    im = np.swapaxes(im, 1, 2)
+                    im = im[0:3]
+                    mask = np.array(af.get_node('/' + image_id))
+                    mask = (mask > 0.5).astype(np.uint8)
+                    self.createRFRecoad(im, mask, writer)
+        writer.close()
+        return "File has been written..."
 
 
     def execute(self):
         self.logger.addHandler(self.handler)
 
 
-plugin_config = "/home/runge/gsi/satelliteimageclassifier/config/config.json"
-
+plugin_config = "/home/geesara/project/satelliteimageclassifier/config/config.json"
 dataprocessor = DataProcessor(plugin_config)
 dataprocessor.execute()
-dataprocessor.preproc_train("/data/train/AOI_5_Khartoum_Train")
+numberOfChannels = 3
+# dataprocessor.preproc_train("/data/train/AOI_5_Khartoum_Train")
+dataprocessor._get_valtrain_mul_data(5, dataprocessor.writer_multi)
+image, annotation = dataprocessor.read_and_decode(dataprocessor.tfrecords_filename_multi, numberOfChannels)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# init_op = tf.group(tf.global_variables_initializer(),
+#                    tf.local_variables_initializer())
+#
+# with tf.Session()  as sess:
+#     sess.run(init_op)
+#
+#     # coord = tf.train.Coordinator()
+#     # threads = tf.train.start_queue_runners(coord=coord)
+#
+#     # Let's read off 3 batches just for example
+#     # for i in xrange(1):
+#     img, anno = sess.run([image, annotation])
+#     print(img[0, :, :, :].shape)
+#
+#     print('current batch')
+#
+#     # We selected the batch size of two
+#     # So we should get two image pairs in each batch
+#     # Let's make sure it is random
+#
+#     io.imshow(img[0, :, :, :])
+#     io.show()
+#
+#     io.imshow(anno[0, :, :, 0])
+#     io.show()
+#
+#     io.imshow(img[1, :, :, :])
+#     io.show()
+#
+#     io.imshow(anno[1, :, :, 0])
+#     io.show()
+#
+#     # coord.request_stop()
+#     # coord.join(threads)
