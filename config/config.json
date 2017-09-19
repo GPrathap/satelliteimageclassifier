@@ -1,0 +1,7 @@
+{
+  "dataset_name":"spacenet",
+  "data_dir":"/home/runge/gsi/utilities/dataset/processedBuildingLabels",
+  "result_dir":"/home/runge/gsi/satelliteimageclassifier/result",
+  "image_read_from":10,
+  "number_of_images_to_read":20
+}
