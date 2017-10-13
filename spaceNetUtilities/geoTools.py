@@ -6,9 +6,9 @@ import subprocess
 import math
 import geopandas as gpd
 import shapely
-from shapely.geometry import Point
-from pyproj import Proj, transform
-from fiona.crs import from_epsg
+# from shapely.geometry import Point
+# from pyproj import Proj, transform
+# from fiona.crs import from_epsg
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.linestring import LineString
@@ -305,9 +305,6 @@ def pixelToGeoCoord(xPix, yPix, inputRaster, sourceSR='', geomTransform='', targ
         source_sr = osr.SpatialReference()
         source_sr.ImportFromWkt(srcRaster.GetProjectionRef())
 
-
-
-
     geom = ogr.Geometry(ogr.wkbPoint)
     xOrigin = geomTransform[0]
     yOrigin = geomTransform[3]
@@ -389,9 +386,6 @@ def geoPolygonToPixelPolygonWKT(geom, inputRaster, targetSR, geomTransform, brea
 
 def pixelWKTToGeoWKT(geomWKT, inputRaster, targetSR='', geomTransform='', breakMultiPolygonPix=False):
     # Returns  GeoCoordinateList from PixelCoordinateList
-
-
-
     geomPix = ogr.CreateGeometryFromWkt(geomWKT)
     geomGeoList = pixelGeomToGeoGeom(geomPix, inputRaster, targetSR=targetSR,
                                  geomTransform=geomTransform, breakMultiPolygonPix=breakMultiPolygonPix)

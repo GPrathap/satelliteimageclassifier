@@ -15,7 +15,8 @@ source activate py35 && for train_path in $@; do
     python v16.py preproc_train $train_path
 
     echo ">>> TRAINING v9s model"
-    echo python v9s.py validate $train_path
+    echo python v9s.py from dir_traversal_tfrecord import tfrecord_auto_traversal
+ $train_path
     python v9s.py validate $train_path
     echo python v9s.py evalfscore $train_path
     python v9s.py evalfscore $train_path

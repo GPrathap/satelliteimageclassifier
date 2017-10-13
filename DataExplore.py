@@ -108,31 +108,12 @@ class DataExplore():
                                         npDistFileName=outfile,
                                         noDataValue=0, burn_values=self.pos_val,
                                         dist_mult=1, vmax_dist=64)
-        # plot
-        plot_name = self.dist_demo_dir + name_root + '.png'
-        mask_image = plt.imread(maskSrc)
-        dist_image = np.load(outfile)
-        plot_dist_transform.plot_dist_transform(input_image, pixel_coords,
-                                                dist_image, figsize=(8, 8),
-                                                plot_name=plot_name,
-                                                add_title=False)
-        plot_name = self.all_demo_dir + name_root + '_titles.png'
-        mask_image = plt.imread(maskSrc)
-        dist_image = np.load(outfile)
-        plot_all_transforms.plot_all_transforms(input_image, pixel_coords,
-                                                mask_image, dist_image,
-                                                figsize=(8, 8), plot_name=plot_name,
-                                                add_global_title=False,
-                                                colorbar=False,
-                                                add_titles=True,
-                                                poly_face_color='orange', poly_edge_color='red',
-                                                poly_nofill_color='blue', cmap='bwr')
 
     def execute(self):
         self.plot_result()
 
 
-plugin_config = "/home/runge/gsi/satelliteimageclassifier/config/config.json"
+plugin_config = "/home/geesara/project/satelliteimageclassifier/config/config.json"
 data_explore_util = DataExplore(plugin_config)
-data_explore_util.plot_mapping_of_image_given_by_name('/home/runge/gsi/satelliteimageclassifier/result/3band/3band_AOI_1_RIO_img578.tif')
+data_explore_util.plot_mapping_of_image_given_by_name('/home/geesara/project/satelliteimageclassifier/result/3band/3band_AOI_1_RIO_img2149.tif')
 # data_explore_util.execute()

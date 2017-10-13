@@ -90,7 +90,7 @@ def directory_name_to_area_id(datapath):
 
     Usage:
 
-        >>> directory_name_to_area_id("/data/test/AOI_2_Vegas")
+        >>> directory_name_to_area_id('/data/test/AOI_2_Vegas')
         2
     """
     dir_name = Path(datapath).name

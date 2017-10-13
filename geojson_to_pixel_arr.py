@@ -72,9 +72,9 @@ def geojson_to_pixel_arr(raster_file, geojson_file, pixel_ints=True,
                     if verbose: 
                         print ("coord:", coord)
                     lon, lat, z = coord 
-                    px, py = gT.latLonToPixel(lat, lon, input_raster=src_raster,
-                                         targetsr=targetsr, 
-                                         geomTransform=geom_transform)
+                    px, py = gT.latlon2pixel(lat, lon, input_raster=src_raster,
+                                         targetsr=targetsr,
+                                             geom_transform=geom_transform)
                     poly_list_pix.append([px, py])
                     if verbose:
                         print ("px, py", px, py)

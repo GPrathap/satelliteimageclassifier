@@ -256,26 +256,26 @@ def image_mask_resized_from_summary(df, image_id):
     return im_mask
 
 
-def generate_test_mul_image_prep(area_id):
-    prefix = area_id_to_prefix(area_id)
-
-    df_test = pd.read_csv(
-        FMT_TEST_IMAGELIST_PATH.format(prefix=prefix),
-        index_col='ImageId')
-    band_mul_th = __load_band_cut_th(
-        FMT_MUL_BANDCUT_TH_PATH.format(prefix), bandsz=8)[area_id]
-
-    fn = FMT_TEST_MUL_STORE.format(prefix)
-    logger.info("Prepare image container: {}".format(fn))
-    with tb.open_file(fn, 'w') as f:
-        for image_id in tqdm.tqdm(df_test.index, total=len(df_test)):
-            im = get_resized_raster_8chan_image_test(
-                image_id, band_rgb_th, band_mul_th)
-            atom = tb.Atom.from_dtype(im.dtype)
-            filters = tb.Filters(complib='blosc', complevel=9)
-            ds = f.create_carray(f.root, image_id, atom, im.shape,
-                                 filters=filters)
-            ds[:] = im
+# def generate_test_mul_image_prep(area_id):
+#     prefix = area_id_to_prefix(area_id)
+#
+#     df_test = pd.read_csv(
+#         FMT_TEST_IMAGELIST_PATH.format(prefix=prefix),
+#         index_col='ImageId')
+#     band_mul_th = __load_band_cut_th(
+#         FMT_MUL_BANDCUT_TH_PATH.format(prefix), bandsz=8)[area_id]
+#
+#     fn = FMT_TEST_MUL_STORE.format(prefix)
+#     logger.info("Prepare image container: {}".format(fn))
+#     with tb.open_file(fn, 'w') as f:
+#         for image_id in tqdm.tqdm(df_test.index, total=len(df_test)):
+#             im = get_resized_raster_8chan_image_test(
+#                 image_id, band_rgb_th, band_mul_th)
+#             atom = tb.Atom.from_dtype(im.dtype)
+#             filters = tb.Filters(complib='blosc', complevel=9)
+#             ds = f.create_carray(f.root, image_id, atom, im.shape,
+#                                  filters=filters)
+#             ds[:] = im
 
 
 def prep_image_mask(area_id, is_valtrain=True):
@@ -587,7 +587,8 @@ def prep_valtrain_valtest_imagelist(area_id):
 
 def prep_test_imagelist(area_id, datapath):
     prefix = area_id_to_prefix(area_id)
-
+    print("------> path")
+    print(prefix)
     image_id_list = glob.glob(str(
         Path(datapath) /
         Path("./PAN/PAN_{prefix:s}_*.tif")).format(prefix=prefix))
@@ -632,7 +633,7 @@ def prefix_to_area_id(prefix):
         'AOI_4_Shanghai': 4,
         'AOI_5_Khartoum': 5,
     }
-    return area_dict[area_id]
+    return area_dict[prefix]
 
 
 def area_id_to_prefix(area_id):
@@ -827,9 +828,10 @@ def preproc_test(datapath):
 
     # Imagelist
     if Path(FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)).exists():
-        logger.info("Generate IMAGELIST for inference ... skip")
+        logger.info(" Generate IMAGELIST for inference ... skip")
     else:
         logger.info("Generate IMAGELIST for inference")
+        logger.info(area_id)
         prep_test_imagelist(area_id, datapath)
 
     # Image HDF5 store (RGB)
@@ -851,3 +853,18 @@ def preproc_test(datapath):
 
 if __name__ == '__main__':
     cli()
+
+def preproc_test(datapath):
+    """ test.sh """
+    area_id = directory_name_to_area_id(datapath)
+    prefix = area_id_to_prefix(area_id)
+    logger.info("preproc_test for {}".format(prefix))
+
+    # Imagelist
+    if Path(FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)).exists():
+        logger.info("Generate IMAGELIST for inference ... skip")
+    else:
+        logger.info("Generate IMAGELIST for inference")
+        print("area id;;;;;")
+        print(area_id)
+        prep_test_imagelist(area_id, datapath)

@@ -1,7 +1,18 @@
 {
   "dataset_name":"spacenet",
-  "data_dir":"/home/runge/gsi/utilities/dataset/processedBuildingLabels",
-  "result_dir":"/home/runge/gsi/satelliteimageclassifier/result",
+  "data_dir":"/home/geesara/dataset/processedBuildingLabels",
+  "result_dir":"/home/geesara/project/satelliteimageclassifier/result",
   "image_read_from":10,
-  "number_of_images_to_read":20
+  "number_of_images_to_read":20,
+  "width_of_image":256,
+  "height_of_image":256,
+  "multi_band_size":8,
+  "base_train_dir":"/data/train",
+  "working_dir":"/data/working",
+  "image_dir":"/data/working/images/v5",
+  "tfrecords_filename_rgb_train":"/data/working/images/v5/rgb_segmentation_train.tfrecords",
+  "tfrecords_filename_rgb_test":"/data/working/images/v5/rgb_segmentation_test.tfrecords",
+  "tfrecords_filename_multi_train":"/data/working/images/v5/multi_segmentation_train.tfrecords",
+  "tfrecords_filename_multi_test":"/data/working/images/v5/multi_segmentation_test.tfrecords",
+  "rgb_band":3
 }
