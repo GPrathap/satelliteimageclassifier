@@ -22,10 +22,10 @@ class QueueLoader():
                 if(type=="rgb"):
                     file_name = str(self.plugin_config["tfrecords_filename_rgb_train"])
                 else:
-                    file_name = str(self.plugin_config["tfrecords_filename_rgb_test"])
+                    file_name = str(self.plugin_config["tfrecords_filename_multi_test"])
             else:
                 if (type == "rgb"):
-                    file_name = str(self.plugin_config["tfrecords_filename_multi_train"])
+                    file_name = str(self.plugin_config["tfrecords_filename_rgb_train"])
                 else:
                     file_name = str(self.plugin_config["tfrecords_filename_multi_train"])
 
