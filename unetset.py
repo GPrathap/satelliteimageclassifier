@@ -16,7 +16,7 @@ type_of_data="multi"
 generator_train = GISDataProvider(plugin_config, type, train=True)
 generator_test = GISDataProvider(plugin_config, type, train=False)
 batch_size_for_net=2
-epochs=10
+epochs=20
 net = unet.Unet(channels=generator_train.channels, n_class=generator_train.classes, layers=3,
                 features_root=16)
 trainer = unet.Trainer(net, optimizer="momentum", opt_kwargs=dict(momentum=0.2), batch_size=batch_size_for_net,
