@@ -2,7 +2,54 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="41fb40da-c985-498b-8bc8-99b33c041a97" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DataProviderGSI.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/galaxies.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/rfi.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/stats.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/toy_problem.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/.pydevproject" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/AUTHORS.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/CONTRIBUTING.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/HISTORY.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/LICENSE" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/MANIFEST.in" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/Makefile" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/README.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/batch/unet.batch" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/batch/unet.sh" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/demo/.gitignore" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/demo/demo_radio_data.ipynb" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/demo/demo_toy_problem.ipynb" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/Makefile" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/authors.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/check_sphinx.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/conf.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/contributing.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/history.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/index.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/installation.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/modules.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/tf_unet.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/docs/usage.rst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/.gitignore" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/launcher.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/radio_util.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/rfi_launcher.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/ufig_launcher.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/ufig_util.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/ultrasound_launcher.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/scripts/ultrasound_util.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/setup.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/test/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/test/test_tf_unet.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/tf_unet/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/tf_unet/image_gen.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/tf_unet/image_util.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/tf_unet/layers.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tf_unetnew/tf_unet/util.py" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tf_unet" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tensorflow-queue-example" afterPath="$PROJECT_DIR$/tensorflow-queue-example" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/unet_trained/graph.pb" afterPath="$PROJECT_DIR$/unet_trained/graph.pb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/unet_trained/model.cpkt.data-00000-of-00001" afterPath="$PROJECT_DIR$/unet_trained/model.cpkt.data-00000-of-00001" />
@@ -32,7 +79,7 @@
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$Doctests_in_ModleTrain__1_.coverage" NAME="Doctests in ModleTrain (1) Coverage Results" MODIFIED="1507384881501" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$train_ssd_network.coverage" NAME="train_ssd_network Coverage Results" MODIFIED="1505843619072" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SSD-Tensorflow" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$main.coverage" NAME="main Coverage Results" MODIFIED="1507408034228" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tensorflow-queue-example" />
-    <SUITE FILE_PATH="coverage/satelliteimageclassifier$unetset.coverage" NAME="unetset Coverage Results" MODIFIED="1507984828123" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/satelliteimageclassifier$unetset.coverage" NAME="unetset Coverage Results" MODIFIED="1507985920273" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$Nosetests_in_vgg_test_py.coverage" NAME="Nosetests in vgg_test.py Coverage Results" MODIFIED="1505829024468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/nets" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$Nosetests_for_vgg_test_VGGATest.coverage" NAME="Nosetests for vgg_test.VGGATest Coverage Results" MODIFIED="1505836494271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/neuralnets" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$spacenet_explore.coverage" NAME="spacenet_explore Coverage Results" MODIFIED="1505641167399" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -48,12 +95,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="unetset.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="unetset.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/unetset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="207">
+              <caret line="24" column="23" lean-forward="true" selection-start-line="24" selection-start-column="23" selection-end-line="24" selection-end-column="23" />
+              <folding>
+                <element signature="e#1#36#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -71,7 +120,7 @@
         </entry>
       </file>
       <file leaf-file-name="image_util.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/image_util.py">
+        <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/image_util.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
               <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="4" selection-end-column="21" />
@@ -94,8 +143,8 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="unet.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/unet.py">
+      <file leaf-file-name="unet.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="180">
               <caret line="10" column="22" lean-forward="false" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
@@ -117,7 +166,7 @@
         </entry>
       </file>
       <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/__init__.py">
+        <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="18">
               <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
@@ -127,7 +176,7 @@
         </entry>
       </file>
       <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tf_unet/__init__.py">
+        <entry file="file://$PROJECT_DIR$/tf_unetnew/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
               <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -213,7 +262,7 @@
     </replaceStrings>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/tf_unet" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -260,8 +309,8 @@
         <option value="$PROJECT_DIR$/QueueLoader.py" />
         <option value="$PROJECT_DIR$/tf_unet/demo/demo_radio_data.ipynb" />
         <option value="$PROJECT_DIR$/DataProviderGSI.py" />
-        <option value="$PROJECT_DIR$/unetset.py" />
         <option value="$PROJECT_DIR$/tf_unet/tf_unet/unet.py" />
+        <option value="$PROJECT_DIR$/unetset.py" />
       </list>
     </option>
   </component>
@@ -300,11 +349,6 @@
             <path>
               <item name="satelliteimageclassifier" type="b2602c69:ProjectViewProjectNode" />
               <item name="satelliteimageclassifier" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="satelliteimageclassifier" type="b2602c69:ProjectViewProjectNode" />
-              <item name="satelliteimageclassifier" type="462c0819:PsiDirectoryNode" />
-              <item name="tf_unet" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -753,7 +797,14 @@
       <option name="project" value="LOCAL" />
       <updated>1507980417077</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="fixing bug on training">
+      <created>1507985652975</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1507985652975</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -792,12 +843,12 @@
     <frame x="65" y="-4" width="1301" height="772" extended-state="6" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4368932" sideWeight="0.50278884" order="13" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.37702265" sideWeight="0.5059761" order="13" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32847896" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.027508091" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.45954692" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32847896" sideWeight="0.49721116" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33705178" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.605178" sideWeight="0.49561754" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37702265" sideWeight="0.49402392" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21354581" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32847896" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -868,12 +919,12 @@
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/tf_unet/tf_unet/unet.py</url>
+          <url>file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py</url>
           <line>383</line>
           <option name="timeStamp" value="52" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/tf_unet/tf_unet/unet.py</url>
+          <url>file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py</url>
           <line>414</line>
           <option name="timeStamp" value="76" />
         </line-breakpoint>
@@ -897,7 +948,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/docs/toy_problem.png">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/docs/toy_problem.png">
       <provider selected="true" editor-type-id="images">
         <state />
       </provider>
@@ -909,7 +960,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/scripts/__init__.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/scripts/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -968,7 +1019,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/scripts/radio_util.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/scripts/radio_util.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
           <caret line="5" column="37" lean-forward="false" selection-start-line="5" selection-start-column="37" selection-end-line="5" selection-end-column="37" />
@@ -995,7 +1046,7 @@
     <entry file="file://$PROJECT_DIR$/prediction/epoch_7.jpg" />
     <entry file="file://$PROJECT_DIR$/prediction/epoch_8.jpg" />
     <entry file="file://$PROJECT_DIR$/prediction/epoch_9.jpg" />
-    <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/image_gen.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/image_gen.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="930">
           <caret line="84" column="0" lean-forward="false" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
@@ -1080,7 +1131,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/demo/demo_toy_problem.ipynb">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/demo/demo_toy_problem.ipynb">
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
           <selected id="8" />
@@ -1111,7 +1162,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/util.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/util.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
           <caret line="83" column="0" lean-forward="false" selection-start-line="83" selection-start-column="0" selection-end-line="83" selection-end-column="0" />
@@ -1119,7 +1170,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/layers.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/layers.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="36">
           <caret line="2" column="4" lean-forward="false" selection-start-line="2" selection-start-column="4" selection-end-line="2" selection-end-column="4" />
@@ -1135,7 +1186,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/demo/demo_radio_data.ipynb">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/demo/demo_radio_data.ipynb">
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
           <selected id="0" />
@@ -1162,7 +1213,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/__init__.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="18">
           <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
@@ -1170,7 +1221,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/__init__.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -1178,7 +1229,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/image_util.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/image_util.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="4" selection-end-column="21" />
@@ -1198,19 +1249,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/unetset.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unet/tf_unet/unet.py">
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
           <caret line="10" column="22" lean-forward="false" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/unetset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="207">
+          <caret line="24" column="23" lean-forward="true" selection-start-line="24" selection-start-column="23" selection-end-line="24" selection-end-column="23" />
+          <folding>
+            <element signature="e#1#36#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
