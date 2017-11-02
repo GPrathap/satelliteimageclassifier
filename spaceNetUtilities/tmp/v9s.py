@@ -1127,91 +1127,91 @@ def _internal_test(area_id, enable_tqdm=False):
                     -1,
                     "POLYGON EMPTY"))
 
-
-def validate_score(area_id):
-    """
-    Calc competition score
-    """
-    prefix = area_id_to_prefix(area_id)
-
-    # Prediction phase
-    if not Path(FMT_VALTESTPRED_PATH.format(prefix)).exists():
-        X_val, y_val = _get_valtest_mul_data(area_id)
-        X_mean = get_mul_mean_image(area_id)
-
-        # Load model weights
-        # Predict and Save prediction result
-        model = get_unet()
-        model.load_weights(FMT_VALMODEL_PATH.format(prefix))
-        y_pred = model.predict(X_val - X_mean, batch_size=8, verbose=1)
-        del model
-
-        # Save prediction result
-        fn = FMT_VALTESTPRED_PATH.format(prefix)
-        with tb.open_file(fn, 'w') as f:
-            atom = tb.Atom.from_dtype(y_pred.dtype)
-            filters = tb.Filters(complib='blosc', complevel=9)
-            ds = f.create_carray(f.root, 'pred', atom, y_pred.shape,
-                                 filters=filters)
-            ds[:] = y_pred
-
-    # Postprocessing phase
-    if not Path(FMT_VALTESTPOLY_PATH.format(prefix)).exists():
-        fn_test = FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
-        df_test = pd.read_csv(fn_test, index_col='ImageId')
-        fn = FMT_VALTESTPRED_PATH.format(prefix)
-        with tb.open_file(fn, 'r') as f:
-            y_pred = np.array(f.get_node('/pred'))
-        print(y_pred.shape)
-
-        fn_out = FMT_VALTESTPOLY_PATH.format(prefix)
-        with open(fn_out, 'w') as f:
-            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
-            for idx, image_id in enumerate(df_test.index.tolist()):
-                df_poly = mask_to_poly(y_pred[idx][0])
-                if len(df_poly) > 0:
-                    for i, row in df_poly.iterrows():
-                        f.write("{},{},\"{}\",{:.6f}\n".format(
-                            image_id,
-                            row.bid,
-                            row.wkt,
-                            row.area_ratio))
-                else:
-                    f.write("{},{},{},0\n".format(
-                        image_id,
-                        -1,
-                        "POLYGON EMPTY"))
-
-        # update fn_out
-        with open(fn_out, 'r') as f:
-            lines = f.readlines()
-        with open(fn_out, 'w') as f:
-            f.write(lines[0])
-            for line in lines[1:]:
-                line = _remove_interiors(line)
-                f.write(line)
-
-    # Validation solution file
-    if not Path(FMT_VALTESTTRUTH_PATH.format(prefix)).exists():
-        fn_true = FMT_TRAIN_SUMMARY_PATH.format(prefix=prefix)
-        df_true = pd.read_csv(fn_true)
-        # # Remove prefix "PAN_"
-        # df_true.loc[:, 'ImageId'] = df_true.ImageId.str[4:]
-
-        fn_test = FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
-        df_test = pd.read_csv(fn_test)
-        df_test_image_ids = df_test.ImageId.unique()
-
-        fn_out = FMT_VALTESTTRUTH_PATH.format(prefix)
-        with open(fn_out, 'w') as f:
-            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
-            df_true = df_true[df_true.ImageId.isin(df_test_image_ids)]
-            for idx, r in df_true.iterrows():
-                f.write("{},{},\"{}\",{:.6f}\n".format(
-                    r.ImageId,
-                    r.BuildingId,
-                    r.PolygonWKT_Pix,
-                    1.0))
+#
+# def validate_score(area_id):
+#     """
+#     Calc competition score
+#     """
+#     prefix = area_id_to_prefix(area_id)
+#
+#     # Prediction phase
+#     if not Path(FMT_VALTESTPRED_PATH.format(prefix)).exists():
+#         X_val, y_val = _get_valtest_mul_data(area_id)
+#         X_mean = get_mul_mean_image(area_id)
+#
+#         # Load model weights
+#         # Predict and Save prediction result
+#         model = get_unet()
+#         model.load_weights(FMT_VALMODEL_PATH.format(prefix))
+#         y_pred = model.predict(X_val - X_mean, batch_size=8, verbose=1)
+#         del model
+#
+#         # Save prediction result
+#         fn = FMT_VALTESTPRED_PATH.format(prefix)
+#         with tb.open_file(fn, 'w') as f:
+#             atom = tb.Atom.from_dtype(y_pred.dtype)
+#             filters = tb.Filters(complib='blosc', complevel=9)
+#             ds = f.create_carray(f.root, 'pred', atom, y_pred.shape,
+#                                  filters=filters)
+#             ds[:] = y_pred
+#
+#     # Postprocessing phase
+#     if not Path(FMT_VALTESTPOLY_PATH.format(prefix)).exists():
+#         fn_test = FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+#         df_test = pd.read_csv(fn_test, index_col='ImageId')
+#         fn = FMT_VALTESTPRED_PATH.format(prefix)
+#         with tb.open_file(fn, 'r') as f:
+#             y_pred = np.array(f.get_node('/pred'))
+#         print(y_pred.shape)
+#
+#         fn_out = FMT_VALTESTPOLY_PATH.format(prefix)
+#         with open(fn_out, 'w') as f:
+#             f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+#             for idx, image_id in enumerate(df_test.index.tolist()):
+#                 df_poly = mask_to_poly(y_pred[idx][0])
+#                 if len(df_poly) > 0:
+#                     for i, row in df_poly.iterrows():
+#                         f.write("{},{},\"{}\",{:.6f}\n".format(
+#                             image_id,
+#                             row.bid,
+#                             row.wkt,
+#                             row.area_ratio))
+#                 else:
+#                     f.write("{},{},{},0\n".format(
+#                         image_id,
+#                         -1,
+#                         "POLYGON EMPTY"))
+#
+#         # update fn_out
+#         with open(fn_out, 'r') as f:
+#             lines = f.readlines()
+#         with open(fn_out, 'w') as f:
+#             f.write(lines[0])
+#             for line in lines[1:]:
+#                 line = _remove_interiors(line)
+#                 f.write(line)
+#
+#     # Validation solution file
+#     if not Path(FMT_VALTESTTRUTH_PATH.format(prefix)).exists():
+#         fn_true = FMT_TRAIN_SUMMARY_PATH.format(prefix=prefix)
+#         df_true = pd.read_csv(fn_true)
+#         # # Remove prefix "PAN_"
+#         # df_true.loc[:, 'ImageId'] = df_true.ImageId.str[4:]
+#
+#         fn_test = FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+#         df_test = pd.read_csv(fn_test)
+#         df_test_image_ids = df_test.ImageId.unique()
+#
+#         fn_out = FMT_VALTESTTRUTH_PATH.format(prefix)
+#         with open(fn_out, 'w') as f:
+#             f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+#             df_true = df_true[df_true.ImageId.isin(df_test_image_ids)]
+#             for idx, r in df_true.iterrows():
+#                 f.write("{},{},\"{}\",{:.6f}\n".format(
+#                     r.ImageId,
+#                     r.BuildingId,
+#                     r.PolygonWKT_Pix,
+#                     1.0))
 
 
 def validate_all_score():
@@ -1412,7 +1412,6 @@ def _get_valtrain_data(area_id):
 
     return X_val, y_val
 
-
 def predict(area_id):
     prefix = area_id_to_prefix(area_id)
     X_test = _get_test_mul_data(area_id)
@@ -1444,7 +1443,6 @@ def _internal_validate_predict_best_param(area_id,
         epoch=epoch,
         save_pred=False,
         enable_tqdm=enable_tqdm)
-
     return y_pred
 
 
@@ -1723,10 +1721,7 @@ def evalfscore(datapath):
             evaluate_record['area_id'] = area_id
             logger.info("\n" + json.dumps(evaluate_record, indent=4))
             rows.append(evaluate_record)
-
-        pd.DataFrame(rows).to_csv(
-            FMT_VALMODEL_EVALHIST.format(prefix),
-            index=False)
+        pd.DataFrame(rows).to_csv(FMT_VALMODEL_EVALHIST.format(prefix), index=False)
 
     # find best min-poly-threshold
     df_evalhist = pd.read_csv(FMT_VALMODEL_EVALHIST.format(prefix))

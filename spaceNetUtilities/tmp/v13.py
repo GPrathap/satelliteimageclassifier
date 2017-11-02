@@ -1304,7 +1304,7 @@ def prep_valtrain_test_slice_image(area_id):
 
 def prep_train_test_slice_image(area_id):
     prefix = area_id_to_prefix(area_id)
-    logger.info("prep_train_test_slice_images for {}".format(prefix))
+    logger.info("prep_train_tet_slice_images for {}".format(prefix))
 
     df_train = pd.read_csv(
         FMT_TRAIN_IMAGELIST_PATH.format(prefix=prefix),

@@ -3,12 +3,13 @@ import shutil
 import numpy as np
 from collections import OrderedDict
 import logging
+import matplotlib.pyplot as plt
 
 import tensorflow as tf
 
-import util
+from tf_unetnew.tf_unet import util
 from QueueLoader import QueueLoader
-from layers import (weight_variable, weight_variable_devonc, bias_variable,
+from tf_unetnew.tf_unet.layers import (weight_variable, weight_variable_devonc, bias_variable,
                             conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
                             cross_entropy)
 
@@ -251,14 +252,14 @@ class Unet(object):
                                                              self.keep_prob: 1.})
         return prediction
     
-    def save(self, sess, model_path):
+    def save(self, sess, model_path, epoch):
         """
         Saves the current session to a checkpoint
         :param sess: current session
         :param model_path: path to file system location
         """
         saver = tf.train.Saver()
-        save_path = saver.save(sess, model_path)
+        save_path = saver.save(sess, model_path, global_step=epoch)
         return save_path
     
     def restore(self, sess, model_path):
@@ -343,7 +344,8 @@ class Trainer(object):
               dropout=0.75, display_step=1, restore=True, write_graph=True):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
-        save_path = os.path.join(output_path, "model.cpkt")
+        save_path = os.path.join(output_path, "model")
+        final_model_path=save_path
         if epochs == 0:
             return save_path
         init = self._initialize(training_iters, output_path, restore)
@@ -398,7 +400,7 @@ class Trainer(object):
 
                     self.output_epoch_stats(epoch, total_loss, training_iters, lr)
                     self.store_prediction(sess, test_x, test_y, "epoch_%s" % epoch)
-                    save_path = self.net.save(sess, save_path)
+                    final_model_path = self.net.save(sess, save_path, epoch)
 
             except tf.errors.OutOfRangeError:
                 logging.info("Optimization Finished!")
@@ -407,10 +409,53 @@ class Trainer(object):
                 coord.request_stop()
             coord.join(threads)
             sess.close()
-            print("save path: "+ str(save_path))
-            return save_path
+            print("save path: "+ str(final_model_path))
+            return final_model_path
 
-        
+    def predictor(self, model_path, operators):
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        predictiong = []
+        test_image_ids = []
+        with tf.Session(config=config) as sess:
+            sess.run(tf.group(tf.global_variables_initializer(), tf.local_variables_initializer()))
+            coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+            # test_init_x, test_init_y = sess.run([operators.loader_test.images, operators.loader_test.labels])
+            # test_x, test_y = operators.test_dataset(test_init_x, test_init_y)
+            try:
+                ep = 0
+                step = 0
+                epoch = -1
+                while not coord.should_stop():
+                    total_loss = 0
+                    epoch = epoch + 1
+                    print("------" + str(epoch))
+                    # step = step + 1
+                    test_init_x, test_init_y, test_image_ids = sess.run([operators.loader_test.images,
+                                                                         operators.loader_test.labels,
+                                                                         operators.loader_test.image_ids])
+                    print(test_image_ids)
+                    test_x, test_y = operators.test_dataset(test_init_x, test_init_y)
+                    predictiong = self.net.predict(model_path, test_x)
+                    # fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+                    # ax[0].imshow(test_x[0, ..., 0], aspect="auto")
+                    # ax[1].imshow(test_y[0, ..., 1], aspect="auto")
+                    # ax[2].imshow(predictiong[0, ..., 1], aspect="auto")
+                    # plt.show()
+                    print("Next step: {} batch size ({})".format(step, test_init_x.shape))
+
+            except tf.errors.OutOfRangeError:
+                logging.info("Optimization Finished!")
+                print ('\nDone training, epoch limit: %d reached.' % (1))
+            finally:
+                coord.request_stop()
+            coord.join(threads)
+            sess.close()
+            print("save path: " + str(model_path))
+            return predictiong, test_image_ids
+
+
     def store_prediction(self, sess, batch_x, batch_y, name):
         prediction = sess.run(self.net.predicter, feed_dict={self.net.x: batch_x, 
                                                              self.net.y: batch_y, 
@@ -433,19 +478,20 @@ class Trainer(object):
     
     def output_minibatch_stats(self, sess, summary_writer, step, batch_x, batch_y):
         # Calculate batch loss and accuracy
-        summary_str, loss, acc, predictions = sess.run([self.summary_op, 
+        summary_str, loss, acc, jaccard_coef,jaccard_coef_int, predictions = sess.run([self.summary_op,
                                                             self.net.cost, 
-                                                            self.net.accuracy, 
+                                                            self.net.accuracy,
+                                                            self.net.jaccard_coef_cal,
+                                                            self.net.jaccard_coef_int_cal,
                                                             self.net.predicter], 
                                                            feed_dict={self.net.x: batch_x,
                                                                       self.net.y: batch_y,
                                                                       self.net.keep_prob: 1.})
         summary_writer.add_summary(summary_str, step)
         summary_writer.flush()
-        logging.info("Iter {:}, Minibatch Loss= {:.4f}, Training Accuracy= {:.4f}, Minibatch error= {:.1f}%".format(step,
-                                                                                                            loss,
-                                                                                                            acc,
-                                                                                                            error_rate(predictions, batch_y)))
+        logging.info("Iter {:}, Minibatch Loss= {:.4f}, Minibatch jaccard_coef= {:.4f}, "
+                     "Training Accuracy= {:.4f}, Minibatch error= {:.1f}%".format(step, loss, jaccard_coef, acc,
+                                                                            error_rate(predictions, batch_y)))
 
 def _update_avg_gradients(avg_gradients, gradients, step):
     if avg_gradients is None:

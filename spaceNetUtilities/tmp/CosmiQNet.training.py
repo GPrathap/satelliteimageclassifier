@@ -119,7 +119,8 @@ with tf.device(gpu):
             outlayer[i] = tf.nn.relu( tf.add(  tf.scalar_mul( beta[i] , deconv[i]), tf.scalar_mul(1.0-beta[i], inlayer[i])))
 
 
-            # sr is the super-resolution process.  It really only has enhancement meaning during the current layer of training.
+            # sr is the super-resolution process.  It really only has enhancement meaning
+            # during the current layer of training.
             sr[i] = tf.slice(outlayer[i],[0,0,0,0],[-1,-1,-1,numberOfBands])
             # The cost funtion to optimize.  This is not PSNR but monotonically related     
             sr_cost[i] = tf.reduce_sum ( tf.pow( sr[i]-y,2))

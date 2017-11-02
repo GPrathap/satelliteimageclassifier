@@ -109,6 +109,25 @@ class DataExplore():
                                         noDataValue=0, burn_values=self.pos_val,
                                         dist_mult=1, vmax_dist=64)
 
+        plot_name = self.dist_demo_dir + name_root + '.png'
+        mask_image = plt.imread(maskSrc)
+        dist_image = np.load(outfile)
+        plot_dist_transform.plot_dist_transform(input_image, pixel_coords,
+                                                dist_image, figsize=(8, 8),
+                                                plot_name=plot_name,
+                                                add_title=False)
+        plot_name = self.all_demo_dir + name_root + '_titles.png'
+        mask_image = plt.imread(maskSrc)
+        dist_image = np.load(outfile)
+        plot_all_transforms.plot_all_transforms(input_image, pixel_coords,
+                                                mask_image, dist_image,
+                                                figsize=(8, 8), plot_name=plot_name,
+                                                add_global_title=False,
+                                                colorbar=False,
+                                                add_titles=True,
+                                                poly_face_color='orange', poly_edge_color='red',
+                                                poly_nofill_color='blue', cmap='bwr')
+
     def execute(self):
         self.plot_result()
 

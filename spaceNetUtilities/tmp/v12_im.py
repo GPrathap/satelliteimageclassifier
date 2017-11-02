@@ -496,7 +496,7 @@ def split_val_train_test(area_id):
         index=False)
 
 
-def prep_mulmean(area_id, datapath):
+def prep_mulmean(area_id):
     prefix = area_id_to_prefix(area_id)
     X_train = []
 
@@ -597,7 +597,7 @@ def preproc_train(datapath):
         logger.info("Generate MULMEAN ... skip")
     else:
         logger.info("Generate MULMEAN")
-        prep_mulmean(area_id, datapath)
+        prep_mulmean(area_id)
 
     # DONE!
     logger.info("Preproc for training on {} ... done".format(prefix))

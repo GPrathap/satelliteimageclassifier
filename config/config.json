@@ -9,10 +9,9 @@
   "multi_band_size":8,
   "base_train_dir":"/data/train",
   "working_dir":"/data/working",
-  "image_dir":"/data/working/images/v5",
-  "tfrecords_filename_rgb_train":"/data/working/images/v5/rgb_segmentation_train.tfrecords",
-  "tfrecords_filename_rgb_test":"/data/working/images/v5/rgb_segmentation_test.tfrecords",
-  "tfrecords_filename_multi_train":"/data/working/images/v5/multi_segmentation_train.tfrecords",
-  "tfrecords_filename_multi_test":"/data/working/images/v5/multi_segmentation_test.tfrecords",
+  "tfrecords_filename_rgb_train":"rgb_segmentation_train.tfrecords",
+  "tfrecords_filename_rgb_test":"rgb_segmentation_test.tfrecords",
+  "tfrecords_filename_multi_train":"multi_segmentation_train.tfrecords",
+  "tfrecords_filename_multi_test":"multi_segmentation_test.tfrecords",
   "rgb_band":3
 }
