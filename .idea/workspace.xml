@@ -2,27 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="41fb40da-c985-498b-8bc8-99b33c041a97" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/unet_trained/events.out.tfevents.1507984583.geesara-Aspire-V3-572G" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/unet_trained/events.out.tfevents.1507984833.geesara-Aspire-V3-572G" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/unet_trained/events.out.tfevents.1507985804.geesara-Aspire-V3-572G" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/unet_trained/events.out.tfevents.1507985856.geesara-Aspire-V3-572G" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/result/distance_trans/3band_AOI_1_RIO_img1007.npy" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/result/distance_trans/3band_AOI_1_RIO_img1008.npy" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/result/distance_trans/3band_AOI_1_RIO_img578.npy" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/result/distance_trans/3band_AOI_1_RIO_img6456.npy" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tensorflow-queue-example" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DataExplore.py" afterPath="$PROJECT_DIR$/DataExplore.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DataProcessor.py" afterPath="$PROJECT_DIR$/DataProcessor.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DataProviderGSI.py" afterPath="$PROJECT_DIR$/DataProviderGSI.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/QueueLoader.py" afterPath="$PROJECT_DIR$/QueueLoader.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/config.json" afterPath="$PROJECT_DIR$/config/config.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spaceNetUtilities/tmp/CosmiQNet.training.py" afterPath="$PROJECT_DIR$/spaceNetUtilities/tmp/CosmiQNet.training.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spaceNetUtilities/tmp/train.sh" afterPath="$PROJECT_DIR$/spaceNetUtilities/tmp/train.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spaceNetUtilities/tmp/v12_im.py" afterPath="$PROJECT_DIR$/spaceNetUtilities/tmp/v12_im.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spaceNetUtilities/tmp/v13.py" afterPath="$PROJECT_DIR$/spaceNetUtilities/tmp/v13.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/spaceNetUtilities/tmp/v9s.py" afterPath="$PROJECT_DIR$/spaceNetUtilities/tmp/v9s.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py" afterPath="$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/unetset.py" afterPath="$PROJECT_DIR$/unetset.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -46,7 +27,7 @@
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$Doctests_in_ModleTrain__1_.coverage" NAME="Doctests in ModleTrain (1) Coverage Results" MODIFIED="1507384881501" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$train_ssd_network.coverage" NAME="train_ssd_network Coverage Results" MODIFIED="1505843619072" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SSD-Tensorflow" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$main.coverage" NAME="main Coverage Results" MODIFIED="1507408034228" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tensorflow-queue-example" />
-    <SUITE FILE_PATH="coverage/satelliteimageclassifier$unetset.coverage" NAME="unetset Coverage Results" MODIFIED="1509580793789" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/satelliteimageclassifier$unetset.coverage" NAME="unetset Coverage Results" MODIFIED="1509664270408" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$Nosetests_in_vgg_test_py.coverage" NAME="Nosetests in vgg_test.py Coverage Results" MODIFIED="1505829024468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/nets" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$Nosetests_for_vgg_test_VGGATest.coverage" NAME="Nosetests for vgg_test.VGGATest Coverage Results" MODIFIED="1505836494271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/neuralnets" />
     <SUITE FILE_PATH="coverage/satelliteimageclassifier$spacenet_explore.coverage" NAME="spacenet_explore Coverage Results" MODIFIED="1505641167399" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -62,41 +43,31 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="config.json" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/config/config.json">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="8" column="21" lean-forward="false" selection-start-line="8" selection-start-column="21" selection-end-line="8" selection-end-column="21" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="unetset.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/unetset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="288">
-              <caret line="68" column="63" lean-forward="true" selection-start-line="68" selection-start-column="63" selection-end-line="68" selection-end-column="63" />
+            <state relative-caret-position="1440">
+              <caret line="87" column="27" lean-forward="false" selection-start-line="87" selection-start-column="27" selection-end-line="87" selection-end-column="27" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DataProviderGSI.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/DataProviderGSI.py">
+      <file leaf-file-name="v17.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v17.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="126">
-              <caret line="16" column="26" lean-forward="true" selection-start-line="16" selection-start-column="26" selection-end-line="16" selection-end-column="26" />
+            <state relative-caret-position="87">
+              <caret line="568" column="14" lean-forward="false" selection-start-line="568" selection-start-column="4" selection-end-line="568" selection-end-column="14" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="QueueLoader.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/QueueLoader.py">
+      <file leaf-file-name="v9s.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v9s.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="141">
-              <caret line="34" column="0" lean-forward="false" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
+            <state relative-caret-position="83">
+              <caret line="289" column="0" lean-forward="true" selection-start-line="289" selection-start-column="0" selection-end-line="289" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -105,18 +76,8 @@
       <file leaf-file-name="train.sh" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/train.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="313">
-              <caret line="33" column="26" lean-forward="false" selection-start-line="33" selection-start-column="18" selection-end-line="33" selection-end-column="26" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="v16.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v16.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="161">
-              <caret line="912" column="53" lean-forward="true" selection-start-line="912" selection-start-column="53" selection-end-line="912" selection-end-column="53" />
+            <state relative-caret-position="439">
+              <caret line="40" column="28" lean-forward="false" selection-start-line="40" selection-start-column="18" selection-end-line="40" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -125,10 +86,34 @@
       <file leaf-file-name="DataProcessor.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/DataProcessor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="160">
-              <caret line="45" column="8" lean-forward="false" selection-start-line="45" selection-start-column="8" selection-end-line="45" selection-end-column="8" />
+            <state relative-caret-position="82">
+              <caret line="2266" column="0" lean-forward="false" selection-start-line="2266" selection-start-column="0" selection-end-line="2266" selection-end-column="0" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="unet.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="18">
+              <caret line="414" column="45" lean-forward="false" selection-start-line="414" selection-start-column="36" selection-end-line="414" selection-end-column="45" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="v13.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v13.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-721">
+              <caret line="505" column="31" lean-forward="false" selection-start-line="505" selection-start-column="31" selection-end-line="505" selection-end-column="31" />
+              <folding>
+                <element signature="e#84#158#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -146,22 +131,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>_load_data_and_label</find>
-      <find>get_slice_3chan_test_im</find>
-      <find>validate_city_fscore</find>
-      <find>prep_train_test_slice_image</find>
-      <find>area_id_to_osmprefix</find>
-      <find>FMT_VALTRAIN_OSM_STORE</find>
-      <find>FMT_SERIALIZED_OSMDATA</find>
-      <find>preproc_osm</find>
-      <find>location_summary</find>
-      <find>tif_to_latlon</find>
-      <find>Bunch</find>
-      <find>location_summary_test</find>
-      <find>fiona</find>
-      <find>pickle</find>
-      <find>prep_osmlayer_train</find>
-      <find>extract_osmlayers</find>
       <find>extract_buildings_geoms</find>
       <find>FMT_VALTEST_IMAGELIST_PATH</find>
       <find>FMT_TEST_IMAGELIST_PATH</find>
@@ -173,9 +142,25 @@
       <find>valtest</find>
       <find>preproc_train</find>
       <find>dict_n_osm_layers</find>
-      <find>generate_valtrain_batch</find>
       <find>validate</find>
       <find>get_valtest_data_v12</find>
+      <find>preproc_train_v16</find>
+      <find>generate_valtrain_batch</find>
+      <find>._internal_validate_fscore_wo_pred_file</find>
+      <find>fscore</find>
+      <find>evalfscore_v1</find>
+      <find>_internal_validate_fscore_wo_pred_file</find>
+      <find>mask_to_poly</find>
+      <find>evalfscore_v16</find>
+      <find>best</find>
+      <find>_internal_pred_to_pol</find>
+      <find>best_epoch</find>
+      <find>_internal_validate_predict</find>
+      <find>_internal_validate_fscore_wo_pred_file_v12</find>
+      <find>slice_pred_list</find>
+      <find>_internal_validate_predict_best_param</find>
+      <find>evalfscore</find>
+      <find>transform</find>
     </findStrings>
     <replaceStrings>
       <replace>self.FMT_VALTRAIN_IMAGELIST_PATH</replace>
@@ -265,10 +250,10 @@
         <option value="$PROJECT_DIR$/spaceNetUtilities/tmp/v12_im.py" />
         <option value="$PROJECT_DIR$/spaceNetUtilities/tmp/v13.py" />
         <option value="$PROJECT_DIR$/spaceNetUtilities/tmp/v16.py" />
-        <option value="$PROJECT_DIR$/DataProcessor.py" />
         <option value="$PROJECT_DIR$/config/config.json" />
         <option value="$PROJECT_DIR$/QueueLoader.py" />
         <option value="$PROJECT_DIR$/DataProviderGSI.py" />
+        <option value="$PROJECT_DIR$/DataProcessor.py" />
         <option value="$PROJECT_DIR$/unetset.py" />
       </list>
     </option>
@@ -301,8 +286,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -313,23 +296,14 @@
             <path>
               <item name="satelliteimageclassifier" type="b2602c69:ProjectViewProjectNode" />
               <item name="satelliteimageclassifier" type="462c0819:PsiDirectoryNode" />
-              <item name="config" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="satelliteimageclassifier" type="b2602c69:ProjectViewProjectNode" />
-              <item name="satelliteimageclassifier" type="462c0819:PsiDirectoryNode" />
               <item name="spaceNetUtilities" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="satelliteimageclassifier" type="b2602c69:ProjectViewProjectNode" />
-              <item name="satelliteimageclassifier" type="462c0819:PsiDirectoryNode" />
-              <item name="spaceNetUtilities" type="462c0819:PsiDirectoryNode" />
-              <item name="tmp" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -337,7 +311,7 @@
     <property name="nodejs_interpreter_path" value="/usr/bin/node" />
     <property name="js.eslint.eslintPackage" value="" />
     <property name="js-jscs-nodeInterpreter" value="/usr/bin/node" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../tf_unet" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="HbShouldOpenHtmlAsHb" value="" />
   </component>
@@ -786,7 +760,14 @@
       <option name="project" value="LOCAL" />
       <updated>1507985993513</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="adding two new models">
+      <created>1509581010875</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1509581010875</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -822,20 +803,19 @@
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-3" y="25" width="1303" height="780" extended-state="6" />
+    <frame x="65" y="-4" width="1301" height="772" extended-state="6" />
     <layout>
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14581673" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.001618123" sideWeight="0.50278884" order="13" side_tool="true" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.037216827" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13754046" sideWeight="0.49721116" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.08737864" sideWeight="0.49561754" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13915858" sideWeight="0.49083665" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3697211" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32847896" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.074433655" sideWeight="0.49561754" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24940239" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13915858" sideWeight="0.49083665" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14724919" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13592233" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3378486" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -844,6 +824,7 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Execute Anonymous" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32847896" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Salesforce" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
     </layout>
@@ -888,7 +869,8 @@
     <MESSAGE value="adding initial model of U-Net" />
     <MESSAGE value="fixing bug on training" />
     <MESSAGE value="adding unet implementation" />
-    <option name="LAST_COMMIT_MESSAGE" value="adding unet implementation" />
+    <MESSAGE value="adding two new models" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding two new models" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -909,79 +891,54 @@
           <option name="timeStamp" value="52" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py</url>
-          <line>459</line>
-          <option name="timeStamp" value="76" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DataExplore.py</url>
           <line>105</line>
           <option name="timeStamp" value="77" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DataProcessor.py</url>
-          <line>1216</line>
+          <line>1381</line>
           <option name="timeStamp" value="96" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DataProcessor.py</url>
-          <line>1110</line>
-          <option name="timeStamp" value="97" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DataProviderGSI.py</url>
-          <line>32</line>
-          <option name="timeStamp" value="100" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DataProviderGSI.py</url>
-          <line>64</line>
-          <option name="timeStamp" value="101" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DataProviderGSI.py</url>
-          <line>58</line>
-          <option name="timeStamp" value="102" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DataProviderGSI.py</url>
-          <line>49</line>
-          <option name="timeStamp" value="103" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DataProviderGSI.py</url>
-          <line>31</line>
-          <option name="timeStamp" value="104" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DataProcessor.py</url>
-          <line>1883</line>
+          <line>2196</line>
           <option name="timeStamp" value="118" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DataProcessor.py</url>
-          <line>1890</line>
+          <line>2203</line>
           <option name="timeStamp" value="122" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DataProcessor.py</url>
-          <line>1424</line>
+          <line>1739</line>
           <option name="timeStamp" value="124" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DataProcessor.py</url>
-          <line>1528</line>
-          <option name="timeStamp" value="125" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DataProcessor.py</url>
-          <line>1755</line>
+          <line>2069</line>
           <option name="timeStamp" value="127" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/unetset.py</url>
-          <line>52</line>
-          <option name="timeStamp" value="129" />
+          <url>file://$PROJECT_DIR$/DataProcessor.py</url>
+          <line>1803</line>
+          <option name="timeStamp" value="135" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DataProcessor.py</url>
+          <line>1582</line>
+          <option name="timeStamp" value="140" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DataProcessor.py</url>
+          <line>1577</line>
+          <option name="timeStamp" value="141" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DataProcessor.py</url>
+          <line>2266</line>
+          <option name="timeStamp" value="152" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -991,7 +948,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="130" />
+      <option name="time" value="153" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -1000,21 +957,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/trainNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="420" column="45" lean-forward="false" selection-start-line="420" selection-start-column="45" selection-end-line="420" selection-end-column="45" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/lib/python2.7/dist-packages/tensorflow/python/client/session.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="17" column="0" lean-forward="true" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/lib/python2.7/dist-packages/tensorflow/python/framework/ops.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="110">
@@ -1033,13 +975,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unetnew/demo/demo_toy_problem.ipynb">
-      <provider selected="true" editor-type-id="ipnb-editor">
-        <state>
-          <selected id="8" />
         </state>
       </provider>
     </entry>
@@ -1259,15 +1194,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v9s.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="511">
-          <caret line="960" column="25" lean-forward="false" selection-start-line="960" selection-start-column="4" selection-end-line="960" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1281,31 +1207,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="78">
-          <caret line="409" column="0" lean-forward="false" selection-start-line="409" selection-start-column="0" selection-end-line="409" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/lib/python2.7/logging/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="13">
           <caret line="328" column="0" lean-forward="false" selection-start-line="328" selection-start-column="0" selection-end-line="328" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v13.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30726">
-          <caret line="1707" column="20" lean-forward="true" selection-start-line="1707" selection-start-column="20" selection-end-line="1707" selection-end-column="20" />
-          <folding>
-            <element signature="e#84#158#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1321,22 +1227,36 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
           <caret line="732" column="6" lean-forward="false" selection-start-line="732" selection-start-column="6" selection-end-line="732" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/QueueLoader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="141">
+          <caret line="34" column="0" lean-forward="false" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/train.sh">
+    <entry file="file://$PROJECT_DIR$/DataProviderGSI.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="313">
-          <caret line="33" column="26" lean-forward="false" selection-start-line="33" selection-start-column="18" selection-end-line="33" selection-end-column="26" />
+        <state relative-caret-position="100">
+          <caret line="49" column="0" lean-forward="false" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/demo/demo_toy_problem.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="10" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v16.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="912" column="53" lean-forward="true" selection-start-line="912" selection-start-column="53" selection-end-line="912" selection-end-column="53" />
+        <state relative-caret-position="-243">
+          <caret line="461" column="13" lean-forward="true" selection-start-line="461" selection-start-column="13" selection-end-line="461" selection-end-column="13" />
           <folding />
         </state>
       </provider>
@@ -1349,36 +1269,72 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/QueueLoader.py">
+    <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/train.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="141">
-          <caret line="34" column="0" lean-forward="false" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
+        <state relative-caret-position="439">
+          <caret line="40" column="28" lean-forward="false" selection-start-line="40" selection-start-column="18" selection-end-line="40" selection-end-column="28" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/trainNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="83">
+          <caret line="1413" column="8" lean-forward="false" selection-start-line="1413" selection-start-column="8" selection-end-line="1413" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tf_unetnew/tf_unet/unet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="414" column="45" lean-forward="false" selection-start-line="414" selection-start-column="36" selection-end-line="414" selection-end-column="45" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v9s.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="83">
+          <caret line="289" column="0" lean-forward="true" selection-start-line="289" selection-start-column="0" selection-end-line="289" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v17.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="87">
+          <caret line="568" column="14" lean-forward="false" selection-start-line="568" selection-start-column="4" selection-end-line="568" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spaceNetUtilities/tmp/v13.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-721">
+          <caret line="505" column="31" lean-forward="false" selection-start-line="505" selection-start-column="31" selection-end-line="505" selection-end-column="31" />
+          <folding>
+            <element signature="e#84#158#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DataProcessor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="160">
-          <caret line="45" column="8" lean-forward="false" selection-start-line="45" selection-start-column="8" selection-end-line="45" selection-end-column="8" />
+        <state relative-caret-position="82">
+          <caret line="2266" column="0" lean-forward="false" selection-start-line="2266" selection-start-column="0" selection-end-line="2266" selection-end-column="0" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/DataProviderGSI.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="126">
-          <caret line="16" column="26" lean-forward="true" selection-start-line="16" selection-start-column="26" selection-end-line="16" selection-end-column="26" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/unetset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="68" column="63" lean-forward="true" selection-start-line="68" selection-start-column="63" selection-end-line="68" selection-end-column="63" />
+        <state relative-caret-position="1440">
+          <caret line="87" column="27" lean-forward="false" selection-start-line="87" selection-start-column="27" selection-end-line="87" selection-end-column="27" />
           <folding />
         </state>
       </provider>

@@ -1106,6 +1106,95 @@ class DataProcessor():
 
         self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
 
+    def evalfscore_v12(self, datapath, trainer, operators, count):
+        area_id = self.directory_name_to_area_id(datapath)
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
+
+        rows = []
+        for zero_base_epoch in range(1, count + 1):
+            self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
+            enable_tqdm = False
+            path = self.MODEL_DIR + "/model-" + str(zero_base_epoch)
+            self._internal_validate_fscore_wo_pred_file_v12(area_id, trainer, path, operators, epoch=zero_base_epoch,
+                                                            enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
+            evaluate_record = self._calc_fscore_per_aoi(area_id)
+            evaluate_record['zero_base_epoch'] = zero_base_epoch
+            evaluate_record['min_area_th'] = self.MIN_POLYGON_AREA
+            evaluate_record['area_id'] = area_id
+            self.logger.info("\n" + json.dumps(evaluate_record, indent=4))
+            rows.append(evaluate_record)
+        pd.DataFrame(rows).to_csv(self.FMT_VALMODEL_EVALHIST.format(prefix), index=False)
+
+        # find best min-poly-threshold
+        df_evalhist = pd.read_csv(self.FMT_VALMODEL_EVALHIST.format(prefix))
+        best_row = df_evalhist.sort_values(by='fscore', ascending=False).iloc[0]
+        best_epoch = int(best_row.zero_base_epoch)
+        best_fscore = best_row.fscore
+
+        # optimize min area th
+        rows = []
+        for th in [30, 60, 90, 120, 150, 180, 210, 240]:
+            self.logger.info(">>> TH: {}".format(th))
+            predict_flag = True
+            path = self.MODEL_DIR + "/model-" + str(best_epoch)
+            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
+            evaluate_record = self._calc_fscore_per_aoi(area_id)
+            evaluate_record['zero_base_epoch'] = best_epoch
+            evaluate_record['min_area_th'] = th
+            evaluate_record['area_id'] = area_id
+            self.logger.info("\n" + json.dumps(evaluate_record, indent=4))
+            rows.append(evaluate_record)
+
+        pd.DataFrame(rows).to_csv(self.FMT_VALMODEL_EVALTHHIST.format(prefix), index=False)
+
+        self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
+
+
+    def evalfscore_v16(self, datapath, trainer, operators, count):
+        area_id = self.directory_name_to_area_id(datapath)
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
+
+        rows = []
+        for zero_base_epoch in range(1, count + 1):
+            self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
+            enable_tqdm = False
+            path = self.MODEL_DIR + "/model-" + str(zero_base_epoch)
+            self._internal_validate_fscore_wo_pred_file_v16(area_id, trainer, path, operators, epoch=zero_base_epoch,
+                                                        enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
+            evaluate_record = self._calc_fscore_per_aoi(area_id)
+            evaluate_record['zero_base_epoch'] = zero_base_epoch
+            evaluate_record['min_area_th'] = self.MIN_POLYGON_AREA
+            evaluate_record['area_id'] = area_id
+            self.logger.info("\n" + json.dumps(evaluate_record, indent=4))
+            rows.append(evaluate_record)
+        pd.DataFrame(rows).to_csv(self.FMT_VALMODEL_EVALHIST.format(prefix), index=False)
+
+        # find best min-poly-threshold
+        df_evalhist = pd.read_csv(self.FMT_VALMODEL_EVALHIST.format(prefix))
+        best_row = df_evalhist.sort_values(by='fscore', ascending=False).iloc[0]
+        best_epoch = int(best_row.zero_base_epoch)
+        best_fscore = best_row.fscore
+
+        # optimize min area th
+        rows = []
+        for th in [30, 60, 90, 120, 150, 180, 210, 240]:
+            self.logger.info(">>> TH: {}".format(th))
+            predict_flag = True
+            path = self.MODEL_DIR + "/model-" + str(best_epoch)
+            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
+            evaluate_record = self._calc_fscore_per_aoi(area_id)
+            evaluate_record['zero_base_epoch'] = best_epoch
+            evaluate_record['min_area_th'] = th
+            evaluate_record['area_id'] = area_id
+            self.logger.info("\n" + json.dumps(evaluate_record, indent=4))
+            rows.append(evaluate_record)
+
+        pd.DataFrame(rows).to_csv(self.FMT_VALMODEL_EVALTHHIST.format(prefix), index=False)
+
+        self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
+
     def _internal_validate_fscore(self, area_id, trainer, path, operators, epoch=3, predict=True, min_th=30,
                                   enable_tqdm=False):
         prefix = self.area_id_to_prefix(area_id)
@@ -1147,6 +1236,82 @@ class DataProcessor():
                         image_id,
                         -1,
                         "POLYGON EMPTY"))
+
+        # ------------------------
+        # Validation solution file
+        self.logger.info("Validation solution file")
+        # if not Path(FMT_VALTESTTRUTH_PATH.format(prefix)).exists():
+        if True:
+            fn_true = self.FMT_TRAIN_SUMMARY_PATH.format(prefix=prefix)
+            df_true = pd.read_csv(fn_true)
+            # # Remove prefix "PAN_"
+            # df_true.loc[:, 'ImageId'] = df_true.ImageId.str[4:]
+            fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+            df_test = pd.read_csv(fn_test)
+            df_test_image_ids = df_test.ImageId.unique()
+            fn_out = self.FMT_VALTESTTRUTH_PATH.format(prefix)
+            with open(fn_out, 'w') as f:
+                f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+                df_true = df_true[df_true.ImageId.isin(df_test_image_ids)]
+                for idx, r in df_true.iterrows():
+                    f.write("{},{},\"{}\",{:.6f}\n".format(r.ImageId, r.BuildingId, r.PolygonWKT_Pix, 1.0))
+
+    def _internal_validate_fscore_v16(self, area_id, trainer, path, operators, epoch=3, predict=True, min_th=30,
+                                  enable_tqdm=False):
+        prefix = self.area_id_to_prefix(area_id)
+        # Prediction phase
+        self.logger.info("Prediction phase")
+        predicted_result, test_image_ids = self._internal_validate_predict(trainer, path, operators, save_pred=True)
+        fn = self.FMT_VALTESTPRED_PATH.format(prefix)
+        with tb.open_file(fn, 'w') as f:
+            atom = tb.Atom.from_dtype(predicted_result.dtype)
+            filters = tb.Filters(complib='blosc', complevel=9)
+            ds = f.create_carray(f.root, 'pred', atom, predicted_result.shape, filters=filters)
+            ds[:] = predicted_result
+
+        # Postprocessing phase
+        self.logger.info("Postprocessing phase")
+        fn = self.FMT_VALTESTPRED_PATH.format(prefix)
+        fn_out = self.FMT_VALTESTPOLY_PATH.format(prefix)
+        with open(fn_out, 'w') as f, tb.open_file(fn, 'r') as fr:
+
+            y_pred = np.array(fr.get_node('/pred'))
+
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            test_list = test_image_ids.tolist()
+            iterator = enumerate(test_list)
+
+        for idx, image_id in tqdm.tqdm(iterator, total=len(test_list)):
+            pred_values = np.zeros((650, 650))
+            pred_count = np.zeros((650, 650))
+            for slice_pos in range(9):
+                slice_idx = idx * 9 + slice_pos
+
+                pos_j = int(math.floor(slice_pos / 3.0))
+                pos_i = int(slice_pos % 3)
+                x0 = self.STRIDE_SZ * pos_i
+                y0 = self.STRIDE_SZ * pos_j
+                pred_values[x0:x0+self.INPUT_SIZE, y0:y0+self.INPUT_SIZE] += (
+                    y_pred[slice_idx][0]
+                )
+                pred_count[x0:x0+self.INPUT_SIZE, y0:y0+self.INPUT_SIZE] += 1
+            pred_values = pred_values / pred_count
+
+            df_poly = self.mask_to_poly(pred_values, min_polygon_area_th=min_th)
+            if len(df_poly) > 0:
+                for i, row in df_poly.iterrows():
+                    line = "{},{},\"{}\",{:.6f}\n".format(
+                        image_id,
+                        row.bid,
+                        row.wkt,
+                        row.area_ratio)
+                    line = self._remove_interiors(line)
+                    f.write(line)
+            else:
+                f.write("{},{},{},0\n".format(
+                    image_id,
+                    -1,
+                    "POLYGON EMPTY"))
 
         # ------------------------
         # Validation solution file
@@ -1305,6 +1470,156 @@ class DataProcessor():
                     r.BuildingId,
                     r.PolygonWKT_Pix,
                     1.0))
+
+    def _internal_validate_fscore_wo_pred_file_v12(self, area_id, trainer, path, operators, epoch=3, min_th=30,
+                                               enable_tqdm=False):
+        prefix = self.area_id_to_prefix(area_id)
+
+        # Prediction phase
+        self.logger.info("Prediction phase")
+        y_pred, image_ids = self._internal_validate_predict(trainer, path, operators)
+
+        # Postprocessing phase
+        self.logger.info("Postprocessing phase")
+        fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_test = pd.read_csv(fn_test, index_col='ImageId')
+
+        # fn = self.FMT_VALTESTPRED_PATH.format(prefix)
+        fn_out = self.FMT_VALTESTPOLY_PATH.format(prefix)
+        with open(fn_out, 'w') as f:
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            test_list = df_test.index.tolist()
+            iterator = enumerate(test_list)
+
+            for idx, image_id in tqdm.tqdm(iterator, total=len(test_list)):
+                pred_values = np.zeros((650, 650))
+                pred_count = np.zeros((650, 650))
+                for slice_pos in range(9):
+                    slice_idx = idx * 9 + slice_pos
+                    pos_j = int(math.floor(slice_pos / 3.0))
+                    pos_i = int(slice_pos % 3)
+                    x0 = self.STRIDE_SZ * pos_i
+                    y0 = self.STRIDE_SZ * pos_j
+                    mask_pred = skimage.transform.resize(y_pred[slice_idx][0], (256,256))
+                    pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (mask_pred)
+                    pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1
+                pred_values = pred_values / pred_count
+
+                df_poly = self.mask_to_poly(pred_values, min_polygon_area_th=min_th)
+                if len(df_poly) > 0:
+                    for i, row in df_poly.iterrows():
+                        line = "{},{},\"{}\",{:.6f}\n".format(
+                            image_id,
+                            row.bid,
+                            row.wkt,
+                            row.area_ratio)
+                        line = self._remove_interiors(line)
+                        f.write(line)
+                else:
+                    f.write("{},{},{},0\n".format(
+                        image_id,
+                        -1,
+                        "POLYGON EMPTY"))
+
+        # ------------------------
+        # Validation solution file
+        self.logger.info("Validation solution file")
+        fn_true = self.FMT_TRAIN_SUMMARY_PATH.format(prefix=prefix)
+        df_true = pd.read_csv(fn_true)
+
+        # # Remove prefix "PAN_"
+        # df_true.loc[:, 'ImageId'] = df_true.ImageId.str[4:]
+
+        fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_test = pd.read_csv(fn_test)
+        df_test_image_ids = df_test.ImageId.unique()
+
+        fn_out = self.FMT_VALTESTTRUTH_PATH.format(prefix)
+        with open(fn_out, 'w') as f:
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            df_true = df_true[df_true.ImageId.isin(df_test_image_ids)]
+            for idx, r in df_true.iterrows():
+                f.write("{},{},\"{}\",{:.6f}\n".format(
+                    r.ImageId,
+                    r.BuildingId,
+                    r.PolygonWKT_Pix,
+                    1.0))
+
+
+    def _internal_validate_fscore_wo_pred_file_v16(self, area_id, trainer, path, operators, epoch=3, min_th=30,
+                                               enable_tqdm=False):
+        prefix = self.area_id_to_prefix(area_id)
+
+        # Prediction phase
+        self.logger.info("Prediction phase")
+        y_pred, image_ids = self._internal_validate_predict(trainer, path, operators)
+
+        # Postprocessing phase
+        self.logger.info("Postprocessing phase")
+        fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_test = pd.read_csv(fn_test, index_col='ImageId')
+
+        # fn = self.FMT_VALTESTPRED_PATH.format(prefix)
+        fn_out = self.FMT_VALTESTPOLY_PATH.format(prefix)
+        with open(fn_out, 'w') as f:
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            test_list = df_test.index.tolist()
+            iterator = enumerate(test_list)
+
+            for idx, image_id in tqdm.tqdm(iterator, total=len(test_list)):
+                pred_values = np.zeros((650, 650))
+                pred_count = np.zeros((650, 650))
+                for slice_pos in range(9):
+                    slice_idx = idx * 9 + slice_pos
+                    pos_j = int(math.floor(slice_pos / 3.0))
+                    pos_i = int(slice_pos % 3)
+                    x0 = self.STRIDE_SZ * pos_i
+                    y0 = self.STRIDE_SZ * pos_j
+                    mask_pred = skimage.transform.resize(y_pred[slice_idx][0], (256,256))
+                    pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (mask_pred)
+                    pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1
+                pred_values = pred_values / pred_count
+
+                df_poly = self.mask_to_poly(pred_values, min_polygon_area_th=min_th)
+                if len(df_poly) > 0:
+                    for i, row in df_poly.iterrows():
+                        line = "{},{},\"{}\",{:.6f}\n".format(
+                            image_id,
+                            row.bid,
+                            row.wkt,
+                            row.area_ratio)
+                        line = self._remove_interiors(line)
+                        f.write(line)
+                else:
+                    f.write("{},{},{},0\n".format(
+                        image_id,
+                        -1,
+                        "POLYGON EMPTY"))
+
+        # ------------------------
+        # Validation solution file
+        self.logger.info("Validation solution file")
+        fn_true = self.FMT_TRAIN_SUMMARY_PATH.format(prefix=prefix)
+        df_true = pd.read_csv(fn_true)
+
+        # # Remove prefix "PAN_"
+        # df_true.loc[:, 'ImageId'] = df_true.ImageId.str[4:]
+
+        fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_test = pd.read_csv(fn_test)
+        df_test_image_ids = df_test.ImageId.unique()
+
+        fn_out = self.FMT_VALTESTTRUTH_PATH.format(prefix)
+        with open(fn_out, 'w') as f:
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            df_true = df_true[df_true.ImageId.isin(df_test_image_ids)]
+            for idx, r in df_true.iterrows():
+                f.write("{},{},\"{}\",{:.6f}\n".format(
+                    r.ImageId,
+                    r.BuildingId,
+                    r.PolygonWKT_Pix,
+                    1.0))
+
 
     def mask_to_poly(self, mask, min_polygon_area_th=30):
         """
@@ -1645,8 +1960,7 @@ class DataProcessor():
             df_sz = len(df)
             for image_id in tqdm.tqdm(df.index, total=df_sz):
                 # fn_tif = train_image_id_to_path(image_id)
-                fn_tif = self.get_train_image_path_from_imageid(
-                    image_id, datapath, mul=False)
+                fn_tif = self.get_train_image_path_from_imageid(image_id, datapath, mul=False)
                 with rasterio.open(fn_tif, 'r') as fr:
                     values = fr.read(1)
                     masks = []  # rasterize masks
@@ -1815,7 +2129,6 @@ class DataProcessor():
             5: 4,
         }
         osm_layers = dict_n_osm_layers[area_id]
-        n_input_layers = 8 + osm_layers
         self.logger.info("Validate step for {}".format(prefix))
         X_mean = self.get_mul_mean_image(area_id)
         X_osm_mean = np.zeros((osm_layers, self.INPUT_SIZE, self.INPUT_SIZE))
@@ -1905,6 +2218,155 @@ class DataProcessor():
         writer.close()
         self.logger.info("File has been written...")
         return True
+
+    def _get_model_parameter(self, area_id, model_name):
+        prefix = self.area_id_to_prefix(area_id)
+        FMT_VALMODEL_EVALTHHIST = self.FMT_VALMODEL_EVALTHHIST.replace(self.MODEL_NAME, model_name)
+        fn_hist = FMT_VALMODEL_EVALTHHIST.format(prefix)
+        best_row = pd.read_csv(fn_hist).sort_values(
+            by='fscore',
+            ascending=False,
+        ).iloc[0]
+
+        param = dict(
+            fn_epoch=int(best_row['zero_base_epoch']),
+            min_poly_area=int(best_row['min_area_th']),
+        )
+        return param
+
+    def _internal_validate_predict_best_param(self, area_id, model_name, trainer, path, operators,
+                                              enable_tqdm=False):
+        param = self._get_model_parameter(area_id, model_name)
+        epoch = param['fn_epoch']
+        path = self.MODEL_DIR + "/model-" + str(epoch)
+        y_pred, images_ids = self._internal_validate_predict(trainer, path, operators)
+        return y_pred, images_ids
+
+    def _internal_validate_predict_best_param_for_all(self, area_id,
+                                              save_pred=True,
+                                              enable_tqdm=False,
+                                              rescale_pred_list=[],
+                                              slice_pred_list=[]):
+        prefix = self.area_id_to_prefix(area_id)
+
+        # Load valtest imagelist
+        fn_valtest = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_valtest = pd.read_csv(fn_valtest, index_col='ImageId')
+
+        pred_values_array = np.zeros((len(df_valtest), 650, 650))
+        for idx, image_id in enumerate(df_valtest.index.tolist()):
+            pred_values = np.zeros((650, 650))
+            pred_count = np.zeros((650, 650))
+            for slice_pos in range(9):
+                slice_idx = idx * 9 + slice_pos
+                pos_j = int(math.floor(slice_pos / 3.0))
+                pos_i = int(slice_pos % 3)
+                x0 = self.STRIDE_SZ * pos_i
+                y0 = self.STRIDE_SZ * pos_j
+                for slice_pred in slice_pred_list:
+                    mask_a = skimage.transform.resize(slice_pred[slice_idx][0], (256, 256))
+                    pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (mask_a)
+                    pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1
+
+            for rescale_pred in rescale_pred_list:
+                y_pred_idx = skimage.transform.resize(rescale_pred[idx][0], (650, 650))
+                pred_values += y_pred_idx
+            pred_count += 1
+
+            # Normalize
+            pred_values = pred_values / pred_count
+            pred_values_array[idx, :, :] = pred_values
+
+        return pred_values_array
+
+    def _internal_pred_to_poly_file_final(self, area_id,
+                                    y_pred,
+                                    min_th=30):
+        """
+        Write out valtest poly and truepoly
+        """
+        prefix = self.area_id_to_prefix(area_id)
+
+        # Load valtest imagelist
+        fn_valtest = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_valtest = pd.read_csv(fn_valtest, index_col='ImageId')
+
+        # Make parent directory
+        fn_out = self.FMT_VALTESTPOLY_PATH.format(prefix)
+        if not Path(fn_out).parent.exists():
+            Path(fn_out).parent.mkdir(parents=True)
+
+        # Ensemble individual models and write out output files
+        with open(fn_out, 'w') as f:
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            for idx, image_id in enumerate(df_valtest.index.tolist()):
+                df_poly = self.mask_to_poly(y_pred[idx], min_polygon_area_th=min_th)
+                if len(df_poly) > 0:
+                    for i, row in df_poly.iterrows():
+                        line = "{},{},\"{}\",{:.6f}\n".format(
+                            image_id,
+                            row.bid,
+                            row.wkt,
+                            row.area_ratio)
+                        line = self._remove_interiors(line)
+                        f.write(line)
+                else:
+                    f.write("{},{},{},0\n".format(
+                        image_id,
+                        -1,
+                        "POLYGON EMPTY"))
+
+        # Validation solution file
+        fn_true = self.FMT_TRAIN_SUMMARY_PATH.format(prefix=prefix)
+        df_true = pd.read_csv(fn_true)
+
+        # # Remove prefix "PAN_"
+        # df_true.loc[:, 'ImageId'] = df_true.ImageId.str[4:]
+
+        fn_valtest = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_valtest = pd.read_csv(fn_valtest)
+        df_valtest_image_ids = df_valtest.ImageId.unique()
+
+        fn_out = self.FMT_VALTESTTRUTH_PATH.format(prefix)
+        with open(fn_out, 'w') as f:
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            df_true = df_true[df_true.ImageId.isin(df_valtest_image_ids)]
+            for idx, r in df_true.iterrows():
+                line = "{},{},\"{}\",{:.6f}\n".format(
+                    r.ImageId,
+                    r.BuildingId,
+                    r.PolygonWKT_Pix,
+                    1.0)
+                f.write(line)
+
+    def evalfscore_v17(self, datapath, y_pred_0, y_pred_1, y_pred_2):
+        area_id = self.directory_name_to_area_id(datapath)
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
+        self.logger.info("Averaging")
+        y_pred = self._internal_validate_predict_best_param_for_all(area_id, rescale_pred_list=[y_pred_0],
+            slice_pred_list=[y_pred_1, y_pred_2])
+
+        fn_out = self.FMT_VALTESTPOLY_PATH.format(prefix)
+        if not Path(fn_out).parent.exists():
+            Path(fn_out).parent.mkdir(parents=True)
+
+        # optimize min area th
+        rows = []
+        for th in [30, 60, 90, 120, 150, 180, 210, 240]:
+            self.logger.info(">>> TH: {}".format(th))
+            # predict_flag = True
+            self._internal_pred_to_poly_file_final( area_id, y_pred, min_th=th)
+            evaluate_record = self._calc_fscore_per_aoi(area_id)
+            evaluate_record['min_area_th'] = th
+            evaluate_record['area_id'] = area_id
+            self.logger.info("\n" + json.dumps(evaluate_record, indent=4))
+            rows.append(evaluate_record)
+
+        pd.DataFrame(rows).to_csv(self.FMT_VALMODEL_EVALTHHIST.format(prefix), index=False)
+        self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
+
+
 
     def execute(self):
         self.logger.addHandler(self.handler)
