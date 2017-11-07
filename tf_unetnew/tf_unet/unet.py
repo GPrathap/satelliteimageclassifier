@@ -340,11 +340,22 @@ class Trainer(object):
             os.makedirs(output_path)
         return init
 
+    def get_least_model_details(self, model_path):
+         least_model_path = ""
+         with tf.Session() as sess:
+            sess.run(tf.group(tf.global_variables_initializer(), tf.local_variables_initializer()))
+            ckpt = tf.train.get_checkpoint_state(model_path)
+            if ckpt and ckpt.model_checkpoint_path:
+                least_model_path=ckpt.model_checkpoint_path
+                print ('least_model_details ' + ckpt.model_checkpoint_path)
+            sess.close()
+         return least_model_path
+
     def train(self, operators, output_path, training_iters=10, epochs=1,
               dropout=0.75, display_step=1, restore=True, write_graph=True):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
-        save_path = os.path.join(output_path, "model")
+        save_path = output_path + "/model"
         final_model_path=save_path
         if epochs == 0:
             return save_path

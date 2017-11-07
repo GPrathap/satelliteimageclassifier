@@ -40,36 +40,6 @@ def get_model(plugin_config, dataprocessor, batch_size_for_net, batch_size_for__
 
 plugin_config = "./config/config.json"
 type_of_data="multi"
-datapath="/data/train/AOI_5_Khartoum_Train"
-
-
-# #
-# dataprocessor = DataProcessor(plugin_config, base_model_name="v7", model_name="v7", image_dir="v7")
-# dataprocessor.execute()
-#
-# dataprocessor.preproc_train("/data/train/AOI_5_Khartoum_Train")
-# writer_multi = tf.python_io.TFRecordWriter(dataprocessor.tfrecords_filename_multi_train)
-# dataprocessor._get_valtrain_mul_data(5, writer_multi)
-# writer_multi = tf.python_io.TFRecordWriter(dataprocessor.tfrecords_filename_multi_test)
-# dataprocessor._get_valtest_mul_data(5, writer_multi)
-
-# dataprocessor = DataProcessor(plugin_config, base_model_name="v7", model_name="v12", image_dir="v12")
-# dataprocessor.execute()
-#
-# dataprocessor.preproc_train_v12("/data/train/AOI_5_Khartoum_Train")
-# writer_multi = tf.python_io.TFRecordWriter(dataprocessor.tfrecords_filename_multi_train)
-# dataprocessor.get_valtrain_data_v12(5, writer_multi)
-# writer_multi = tf.python_io.TFRecordWriter(dataprocessor.tfrecords_filename_multi_test)
-# dataprocessor.get_valtest_data_v12(5, writer_multi)
-
-# dataprocessor = DataProcessor(plugin_config, base_model_name="v7", model_name="v16", image_dir="v16",
-#                               is_final=True)
-# dataprocessor.execute()
-# dataprocessor.preproc_train_v16(datapath)
-# writer_multi = tf.python_io.TFRecordWriter(dataprocessor.tfrecords_filename_multi_test)
-# dataprocessor.generate_valtest_batch(datapath, writer_multi)
-# writer_multi = tf.python_io.TFRecordWriter(dataprocessor.tfrecords_filename_multi_train)
-# dataprocessor.generate_valtrain_batch(datapath, writer_multi)
 
 
 batch_size_for_net=1
@@ -80,8 +50,7 @@ dataprocessor_v7 = DataProcessor(plugin_config, base_model_name="v7", model_name
 dataprocessor_v7.execute()
 net_v7, trainer_v7, operators_v7 = get_model(plugin_config, dataprocessor_v7, batch_size_for_net, batch_size_for__test_net, type_of_data,
               epochs, epochs_test)
-area_id = dataprocessor_v7.directory_name_to_area_id(datapath)
-y_pred_0, images_idsv7 = dataprocessor_v7._internal_validate_predict_best_param(area_id, "v7", trainer_v7, datapath, operators_v7,
+y_pred_0, images_idsv7 = dataprocessor_v7._internal_validate_predict_best_param("v7", trainer_v7, operators_v7,
                                               enable_tqdm=False)
 
 batch_size_for_net=9
@@ -92,8 +61,7 @@ dataprocessor_v12 = DataProcessor(plugin_config, base_model_name="v7", model_nam
 dataprocessor_v12.execute()
 net_v12, trainer_v12, operators_v12 = get_model(plugin_config, dataprocessor_v12, batch_size_for_net, batch_size_for__test_net, type_of_data,
               epochs, epochs_test)
-area_id = dataprocessor_v12.directory_name_to_area_id(datapath)
-y_pred_1, images_idsv12 = dataprocessor_v12._internal_validate_predict_best_param(area_id, "v12", trainer_v12, datapath, operators_v12,
+y_pred_1, images_idsv12 = dataprocessor_v12._internal_validate_predict_best_param("v12", trainer_v12, operators_v12,
                                               enable_tqdm=False)
 
 batch_size_for_net=9
@@ -104,23 +72,22 @@ dataprocessor_v16 = DataProcessor(plugin_config, base_model_name="v7", model_nam
 dataprocessor_v16.execute()
 net_v16, trainer_v16, operators_v16 = get_model(plugin_config, dataprocessor_v16, batch_size_for_net, batch_size_for__test_net, type_of_data,
               epochs, epochs_test)
-area_id = dataprocessor_v16.directory_name_to_area_id(datapath)
-y_pred_2, images_idsv16 = dataprocessor_v16._internal_validate_predict_best_param(area_id, "v16", trainer_v16, datapath, operators_v16,
+y_pred_2, images_idsv16 = dataprocessor_v16._internal_validate_predict_best_param("v16", trainer_v16, operators_v16,
                                               enable_tqdm=False)
 
 
-dataprocessor_v17 = DataProcessor(plugin_config, base_model_name="v7", model_name="v16", image_dir="v17",
-                              is_final=False)
-dataprocessor_v17.execute()
-
-
-# dataprocessor_v7.validate(datapath, trainer_v7, operators_v7, training_iters=4, num_epochs=epochs, display_step=2,
-#                        restore=True)
-
-# dataprocessor.evalfscore(datapath, trainer, operators, 3)
-# dataprocessor.evalfscore_v12(datapath, trainer, operators, 3)
-# dataprocessor.evalfscore_v16(datapath, trainer, operators, 3)
-
-dataprocessor_v17.evalfscore_v17(datapath, y_pred_0, y_pred_1, y_pred_2)
+# dataprocessor_v17 = DataProcessor(plugin_config, base_model_name="v7", model_name="v16", image_dir="v17",
+#                               is_final=False)
+# dataprocessor_v17.execute()
+#
+#
+# # dataprocessor_v7.validate(datapath, trainer_v7, operators_v7, training_iters=4, num_epochs=epochs, display_step=2,
+# #                        restore=True)
+#
+# # dataprocessor.evalfscore(datapath, trainer, operators, 3)
+# # dataprocessor.evalfscore_v12(datapath, trainer, operators, 3)
+# # dataprocessor.evalfscore_v16(datapath, trainer, operators, 3)
+#
+# dataprocessor_v17.evalfscore_v17(datapath, y_pred_0, y_pred_1, y_pred_2)
 
 

@@ -7,11 +7,58 @@
   "width_of_image":256,
   "height_of_image":256,
   "multi_band_size":8,
+  "root_dir":"/home/geesara/Music/test",
   "base_train_dir":"/data/train",
   "working_dir":"/data/working",
+  "datapath":"/data/train/AOI_5_Khartoum_Train",
   "tfrecords_filename_rgb_train":"rgb_segmentation_train.tfrecords",
   "tfrecords_filename_rgb_test":"rgb_segmentation_test.tfrecords",
   "tfrecords_filename_multi_train":"multi_segmentation_train.tfrecords",
   "tfrecords_filename_multi_test":"multi_segmentation_test.tfrecords",
-  "rgb_band":3
+  "rgb_band":3,
+  "model_v7":{
+    "train":{
+      "batch_size":1,
+      "epochs":20,
+      "iterations":4
+    },
+    "validate":{
+      "batch_size":2,
+      "epochs":1,
+      "iterations":4
+    },
+    "test":{
+
+    }
+  },
+  "model_v12":{
+    "train":{
+      "batch_size":9,
+      "epochs":20,
+      "iterations":4
+    },
+    "validate":{
+      "batch_size":18,
+      "epochs":1,
+      "iterations":4
+    },
+    "test":{
+
+    }
+  },
+  "model_v16":{
+    "train":{
+      "batch_size":1,
+      "epochs":20,
+      "iterations":4
+    },
+    "validate":{
+      "batch_size":2,
+      "epochs":1,
+      "iterations":4
+    },
+    "test":{
+
+    }
+  }
 }

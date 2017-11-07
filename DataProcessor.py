@@ -18,6 +18,8 @@ import numpy as np
 import skimage.transform
 import rasterio
 import shapely.wkt
+import matplotlib.pyplot as plt
+
 from PIL import Image
 import skimage.io as io
 import tensorflow as tf
@@ -30,9 +32,19 @@ import shapely.geometry
 # from dir_traversal_tfrecord import tfrecord_auto_traversal
 import tensorflow as tf
 import math
+
+from scipy.stats import pearsonr
 from sklearn.datasets.base import Bunch
 import fiona
 import pickle
+
+from tf_unetnew.tf_unet import unet
+
+import os
+from DataProviderGSI import GISDataProvider
+from QueueLoader import QueueLoader
+plt.rcParams['image.cmap'] = 'gist_earth'
+from collections import namedtuple
 
 
 # Logger
@@ -46,21 +58,24 @@ class DataProcessor():
     def __init__(self, plugin_config, base_model_name="v5", model_name="v5", image_dir="v5", is_final=False):
         spacenet_util_dir = os.getcwd() + '/spaceNetUtilities'
         sys.path.extend([spacenet_util_dir])
+        self.plugin_config_dir = plugin_config
         with open(plugin_config) as plugin_config:
             self.plugin_config = json.load(plugin_config)
             self.MODEL_NAME = model_name
             self.ORIGINAL_SIZE = 650
             self.STRIDE_SZ = 197
+            self.ROOT_DIR = str(self.plugin_config["root_dir"])
             self.INPUT_SIZE =  int(self.plugin_config["width_of_image"])
             self.input_image_width = int(self.plugin_config["width_of_image"])
             self.input_image_height = int(self.plugin_config["height_of_image"])
             self.BASE_TRAIN_DIR = str(self.plugin_config["base_train_dir"])
+            self.DATA_PATH = str(self.plugin_config["datapath"])
             self.WORKING_DIR = str(self.plugin_config["working_dir"])
-            self.IMAGE_DIR = "/data/working/images/{}".format(image_dir)
+            self.IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format(image_dir)
             self.LOGFORMAT = '%(asctime)s %(levelname)s %(message)s'
-            self.BASE_DIR = "/data/train"
-            self.MODEL_DIR = "/data/working/models/{}".format(self.MODEL_NAME)
-            self.FN_SOLUTION_CSV = "/data/output/{}.csv".format(self.MODEL_NAME)
+            self.BASE_DIR = self.ROOT_DIR + "/train"
+            self.MODEL_DIR = self.ROOT_DIR + "/working/models/{}".format(self.MODEL_NAME)
+            self.FN_SOLUTION_CSV = self.ROOT_DIR + "/output/{}.csv".format(self.MODEL_NAME)
             self.FMT_TRAIN_SUMMARY_PATH = str(
                 Path(self.BASE_TRAIN_DIR) /
                 Path("{prefix:s}_Train/") /
@@ -78,7 +93,7 @@ class DataProcessor():
                 Path("{datapath:s}/") /
                 Path("MUL-PanSharpen/MUL-PanSharpen_{image_id:s}.tif"))
             self.FMT_RGB_BANDCUT_TH_PATH = self.IMAGE_DIR + "/rgb_bandcut{}.csv"
-            self.BASE_IMAGE_DIR = "/data/working/images/{}".format(base_model_name)
+            self.BASE_IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format(base_model_name)
             self.FMT_VALTRAIN_MASK_STORE = self.IMAGE_DIR + "/valtrain_{}_mask.h5"
             self.FMT_VALTRAIN_IM_STORE = self.IMAGE_DIR + "/valtrain_{}_im.h5"
             self.FMT_VALTRAIN_MUL_STORE = self.IMAGE_DIR + "/valtrain_{}_mul.h5"
@@ -119,7 +134,7 @@ class DataProcessor():
             if (is_final):
                 self.FMT_TRAIN_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_train_ImageId.csv"
                 self.FMT_TEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
-                self.V12_IMAGE_DIR = "/data/working/images/{}".format("v12")
+                self.V12_IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format("v12")
                 # Mask
                 self.FMT_VALTRAIN_MASK_STORE = self.V12_IMAGE_DIR + "/valtrain_{}_mask.h5"
                 self.FMT_VALTEST_MASK_STORE = self.V12_IMAGE_DIR + "/valtest_{}_mask.h5"
@@ -181,7 +196,7 @@ class DataProcessor():
     def createRFRecoad(self, img, annotation, image_id, writer):
         height = self.input_image_height
         width = self.input_image_width
-        self.logger.info("image ---->", str(image_id), "---", "width", str(width))
+        print("image ---->", str(image_id), "---", "width", str(width))
         channels = img.shape[2]
         mask_height = self.input_image_height
         mask_width = self.input_image_width
@@ -929,8 +944,8 @@ class DataProcessor():
                                  filters=filters)
             ds[:] = X_mean
 
-    def preproc_train(self, datapath):
-        area_id = self.directory_name_to_area_id(datapath)
+    def preproc_train(self):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("Preproc for training on {}".format(prefix))
         if Path(self.FMT_VALTRAIN_IMAGELIST_PATH.format(prefix=prefix)).exists():
@@ -947,12 +962,12 @@ class DataProcessor():
             self.logger.info("Generate band stats csv (RGB) ... skip")
         else:
             self.logger.info("Generate band stats csv (RGB)")
-            self.calc_rgb_multiband_cut_threshold(area_id, datapath)
+            self.calc_rgb_multiband_cut_threshold(area_id, self.DATA_PATH)
         if Path(self.FMT_MUL_BANDCUT_TH_PATH.format(prefix)).exists():
             self.logger.info("Generate band stats csv (MUL) ... skip")
         else:
             self.logger.info("Generate band stats csv (MUL)")
-            self.calc_mul_multiband_cut_threshold(area_id, datapath)
+            self.calc_mul_multiband_cut_threshold(area_id, self.DATA_PATH)
         if Path(self.FMT_VALTRAIN_MASK_STORE.format(prefix)).exists():
             self.logger.info("Generate MASK (valtrain) ... skip")
         else:
@@ -967,27 +982,27 @@ class DataProcessor():
             self.logger.info("Generate RGB_STORE (valtrain) ... skip")
         else:
             self.logger.info("Generate RGB_STORE (valtrain)")
-            self.prep_rgb_image_store_train(area_id, datapath, is_valtrain=True)
+            self.prep_rgb_image_store_train(area_id, self.DATA_PATH, is_valtrain=True)
         if Path(self.FMT_VALTEST_IM_STORE.format(prefix)).exists():
             self.logger.info("Generate RGB_STORE (valtest) ... skip")
         else:
             self.logger.info("Generate RGB_STORE (valtest)")
-            self.prep_rgb_image_store_train(area_id, datapath, is_valtrain=False)
+            self.prep_rgb_image_store_train(area_id, self.DATA_PATH, is_valtrain=False)
         if Path(self.FMT_VALTRAIN_MUL_STORE.format(prefix)).exists():
             self.logger.info("Generate MUL_STORE (valtrain) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (valtrain)")
-            self.prep_mul_image_store_train(area_id, datapath, is_valtrain=True)
+            self.prep_mul_image_store_train(area_id, self.DATA_PATH, is_valtrain=True)
         if Path(self.FMT_VALTEST_MUL_STORE.format(prefix)).exists():
             self.logger.info("Generate MUL_STORE (valtest) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (valtest)")
-            self.prep_mul_image_store_train(area_id, datapath, is_valtrain=False)
+            self.prep_mul_image_store_train(area_id, self.DATA_PATH, is_valtrain=False)
         if Path(self.FMT_IMMEAN.format(prefix)).exists():
             self.logger.info("Generate RGBMEAN ... skip")
         else:
             self.logger.info("Generate RGBMEAN")
-            self.prep_immean(area_id, datapath)
+            self.prep_immean(area_id, self.DATA_PATH)
         if Path(self.FMT_MULMEAN.format(prefix)).exists():
             self.logger.info("Generate MULMEAN ... skip")
         else:
@@ -995,28 +1010,29 @@ class DataProcessor():
             self.prep_mulmean(area_id)
             self.logger.info("Preproc for training on {} ... done".format(prefix))
 
-    def preproc_test(self, datapath):
-        area_id = self.directory_name_to_area_id(datapath)
+    def preproc_test(self):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("preproc_test for {}".format(prefix))
         if Path(self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)).exists():
             self.logger.info("Generate IMAGELIST for inference ... skip")
         else:
             self.logger.info("Generate IMAGELIST for inference")
-            self.prep_test_imagelist(area_id, datapath)
+            self.prep_test_imagelist(area_id, self.DATA_PATH)
         if Path(self.FMT_TEST_IM_STORE.format(prefix)).exists():
             self.logger.info("Generate RGB_STORE (test) ... skip")
         else:
             self.logger.info("Generate RGB_STORE (test)")
-            self.prep_rgb_image_store_test(area_id, datapath)
+            self.prep_rgb_image_store_test(area_id, self.DATA_PATH)
         if Path(self.FMT_TEST_MUL_STORE.format(prefix)).exists():
             self.logger.info("Generate MUL_STORE (test) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (test)")
-            self.prep_mul_image_store_test(area_id, datapath)
+            self.prep_mul_image_store_test(area_id, self.DATA_PATH)
             self.logger.info("preproc_test for {} ... done".format(prefix))
 
-    def _get_valtest_mul_data(self, area_id, writer):
+    def _get_valtest_mul_data(self, writer):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
         df_test = pd.read_csv(fn_test)
@@ -1039,7 +1055,8 @@ class DataProcessor():
         self.logger.info("File has been written...")
         return True
 
-    def _get_valtrain_mul_data(self, area_id, writer):
+    def _get_valtrain_mul_data(self, writer):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         fn_train = self.FMT_VALTRAIN_IMAGELIST_PATH.format(prefix=prefix)
         df_train = pd.read_csv(fn_train)
@@ -1051,6 +1068,18 @@ class DataProcessor():
                     im = np.array(f.get_node('/' + image_id))
                     im = np.swapaxes(im, 0, 2)
                     im = np.swapaxes(im, 1, 2)
+                    coff = np.zeros([im.shape[0], im.shape[0]])
+
+                    # for i in range(0, im.shape[0]):  # rows a]re the number of rows in the matrix.
+                    #     band1 = im[i].flatten()
+                    #     for j in range(0, im.shape[0]):
+                    #         band2 = im[j].flatten()
+                    #         r = pearsonr(band1, band2)
+                    #         coff[i][j]=r[0]
+                    # plt.imshow(coff, cmap=plt.cm.ocean)
+                    # plt.colorbar()
+                    # plt.show()
+
                     mask = np.array(af.get_node('/' + image_id))
                     mask = (mask > 0.5).astype(np.uint8)
                     im=np.transpose(im).astype(np.float64)
@@ -1059,11 +1088,15 @@ class DataProcessor():
                     image_id_index = int(image_id_index)
                     self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
-        self.logger.info("File has been written...")
+        print("File has been written ")
         return True
 
-    def evalfscore(self, datapath, trainer, operators, count):
-        area_id = self.directory_name_to_area_id(datapath)
+    def get_total_numberof_model_count(self, trainer):
+        model_path = trainer.get_least_model_details(self.MODEL_DIR)
+        return int(model_path.split("/")[-1].replace("model-", ""))
+
+    def evalfscore(self, trainer, operators, count):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
 
@@ -1106,8 +1139,8 @@ class DataProcessor():
 
         self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
 
-    def evalfscore_v12(self, datapath, trainer, operators, count):
-        area_id = self.directory_name_to_area_id(datapath)
+    def evalfscore_v12(self, trainer, operators, count):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
 
@@ -1151,8 +1184,8 @@ class DataProcessor():
         self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
 
 
-    def evalfscore_v16(self, datapath, trainer, operators, count):
-        area_id = self.directory_name_to_area_id(datapath)
+    def evalfscore_v16(self, trainer, operators, count):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
 
@@ -1336,17 +1369,19 @@ class DataProcessor():
         prefix = self.area_id_to_prefix(area_id)
         truth_file = self.FMT_VALTESTTRUTH_PATH.format(prefix)
         poly_file = self.FMT_VALTESTPOLY_PATH.format(prefix)
+        executable_setup = self.ROOT_DIR +  '/train/visualizer-2.0/visualizer.jar'
+        band_info = self.ROOT_DIR + '/train/visualizer-2.0/data/band-triplets.txt'
         cmd = [
             'java',
             '-jar',
-            '/data/train/visualizer-2.0/visualizer.jar',
+            executable_setup,
             '-truth',
             truth_file,
             '-solution',
             poly_file,
             '-no-gui',
             '-band-triplets',
-            '/data/train/visualizer-2.0/data/band-triplets.txt',
+            band_info,
             '-image-dir',
             'pass',
         ]
@@ -1781,9 +1816,9 @@ class DataProcessor():
                 pickle.dump(geom_layers, f)
 
 
-    def preproc_train_v16(self, datapath):
+    def preproc_train_v16(self):
         """ train.sh """
-        area_id = self.directory_name_to_area_id(datapath)
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         osmprefix = self.area_id_to_osmprefix(area_id)
 
@@ -1798,21 +1833,21 @@ class DataProcessor():
             self.logger.info("Serialize OSM subset ... skip")
         else:
             self.logger.info("Serialize OSM subset")
-            self.preproc_osm(area_id, datapath, is_train=True)
+            self.preproc_osm(area_id, self.DATA_PATH, is_train=True)
 
         # OSM layers (valtrain)
         if Path(self.FMT_VALTRAIN_OSM_STORE.format(prefix)).exists():
             self.logger.info("Generate OSM_STORE (valtrain) ... skip")
         else:
             self.logger.info("Generate OSM_STORE (valtrain)")
-            self.prep_osmlayer_train(area_id, datapath, is_valtrain=True)
+            self.prep_osmlayer_train(area_id, self.DATA_PATH, is_valtrain=True)
 
         # OSM layers (valtest)
         if Path(self.FMT_VALTEST_OSM_STORE.format(prefix)).exists():
             self.logger.info("Generate OSM_STORE (valtest) ... skip")
         else:
             self.logger.info("Generate OSM_STORE (valtest)")
-            self.prep_osmlayer_train(area_id, datapath, is_valtrain=False)
+            self.prep_osmlayer_train(area_id, self.DATA_PATH, is_valtrain=False)
 
     def _internal_validate_predict(self, trainer, path, operators, save_pred=True):
         return trainer.predictor(path, operators)
@@ -2001,9 +2036,9 @@ class DataProcessor():
             im_mean = np.array(f.get_node('/mulmean'))
         return im_mean
 
-    def preproc_train_v12(self, datapath):
+    def preproc_train_v12(self):
         """ train.sh """
-        area_id = self.directory_name_to_area_id(datapath)
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("Preproc for training on {}".format(prefix))
 
@@ -2038,12 +2073,12 @@ class DataProcessor():
             self.logger.info("Generate MUL_STORE (valtrain) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (valtrain)")
-            self.prep_mul_image_only_store_train(area_id, datapath, is_valtrain=True)
+            self.prep_mul_image_only_store_train(area_id, self.DATA_PATH, is_valtrain=True)
         if Path(self.FMT_VALTEST_MUL_STORE.format(prefix)).exists():
             self.logger.info("Generate MUL_STORE (valtest) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (valtest)")
-            self.prep_mul_image_only_store_train(area_id, datapath, is_valtrain=False)
+            self.prep_mul_image_only_store_train(area_id, self.DATA_PATH, is_valtrain=False)
 
         # Image Mean (MUL)
         if Path(self.FMT_MULMEAN.format(prefix)).exists():
@@ -2056,18 +2091,19 @@ class DataProcessor():
         # DONE!
         self.logger.info("Preproc for training on {} ... done".format(prefix))
 
-    def validate(self, datapath, trainer, operators, training_iters=4, num_epochs=3, display_step=2,
-                 restore=True):
-        area_id = self.directory_name_to_area_id(datapath)
+    def validate(self, trainer, operators, training_iters=4, display_step=2, restore=True):
+        model_name = "model_" + self.MODEL_NAME
+        epochs_for_vaidating = int(self.plugin_config[model_name]["validate"]["epochs"])
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info(">> validate sub-command: {}".format(prefix))
         if not Path(self.MODEL_DIR).exists():
             Path(self.MODEL_DIR).mkdir(parents=True)
         self.logger.info("load valtrain")
-        trainer.train(operators, self.MODEL_DIR, training_iters, num_epochs, display_step, restore=True)
+        trainer.train(operators, self.MODEL_DIR, training_iters, epochs_for_vaidating, display_step, restore)
 
-    def generate_valtest_batch(self, datapath, writer):
-        area_id = self.directory_name_to_area_id(datapath)
+    def generate_valtest_batch(self, writer):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         df_train = pd.read_csv(self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix))
         fn_im = self.FMT_VALTEST_MUL_STORE.format(prefix)
@@ -2114,8 +2150,8 @@ class DataProcessor():
         self.logger.info("File has been written...")
         return True
 
-    def generate_valtrain_batch(self, datapath, writer):
-        area_id = self.directory_name_to_area_id(datapath)
+    def generate_valtrain_batch(self, writer):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         df_train = pd.read_csv(self.FMT_VALTRAIN_IMAGELIST_PATH.format(prefix=prefix))
         fn_im = self.FMT_VALTRAIN_MUL_STORE.format(prefix)
@@ -2167,7 +2203,8 @@ class DataProcessor():
         self.logger.info("load valtrain")
         self.logger.info("Instantiate U-Net model")
 
-    def get_valtest_data_v12(self, area_id, writer):
+    def get_valtest_data_v12(self, writer):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
         df_test = pd.read_csv(fn_test)
@@ -2193,7 +2230,8 @@ class DataProcessor():
         self.logger.info("File has been written...")
         return True
 
-    def get_valtrain_data_v12(self, area_id, writer):
+    def get_valtrain_data_v12(self, writer):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         fn_train = self.FMT_VALTRAIN_IMAGELIST_PATH.format(prefix=prefix)
         df_train = pd.read_csv(fn_train)
@@ -2234,8 +2272,9 @@ class DataProcessor():
         )
         return param
 
-    def _internal_validate_predict_best_param(self, area_id, model_name, trainer, path, operators,
+    def _internal_validate_predict_best_param(self, model_name, trainer, operators,
                                               enable_tqdm=False):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         param = self._get_model_parameter(area_id, model_name)
         epoch = param['fn_epoch']
         path = self.MODEL_DIR + "/model-" + str(epoch)
@@ -2339,8 +2378,8 @@ class DataProcessor():
                     1.0)
                 f.write(line)
 
-    def evalfscore_v17(self, datapath, y_pred_0, y_pred_1, y_pred_2):
-        area_id = self.directory_name_to_area_id(datapath)
+    def evalfscore_v17(self, y_pred_0, y_pred_1, y_pred_2):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
         self.logger.info("Averaging")
@@ -2366,10 +2405,47 @@ class DataProcessor():
         pd.DataFrame(rows).to_csv(self.FMT_VALMODEL_EVALTHHIST.format(prefix), index=False)
         self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
 
+    def get_model(self, type_of_data):
+
+        model_name = "model_"+self.MODEL_NAME
+        batch_size_for_training = int(self.plugin_config[model_name]["train"]["batch_size"])
+        training_epochs = int(self.plugin_config[model_name]["train"]["epochs"])
+        batch_size_for_validating = int(self.plugin_config[model_name]["validate"]["batch_size"])
+        validating_epochs = int(self.plugin_config[model_name]["validate"]["epochs"])
+        # batch_size_for_net = int(self.plugin_config[model_name]["train"]["batch_size"])
+        additianl_channals = 0
+        if self.MODEL_NAME == "v16":
+            additianl_channals = 4
+        generator_train = GISDataProvider(self.plugin_config_dir, self,
+                                          additianl_channals=additianl_channals,
+                                          type=type_of_data, train=True)
+        generator_test = GISDataProvider(self.plugin_config_dir, self,
+                                         additianl_channals=additianl_channals,
+                                         type=type_of_data, train=False)
+
+        net = unet.Unet(channels=generator_train.channels, n_class=generator_train.classes, layers=3,
+                        features_root=16)
+        trainer = unet.Trainer(net, optimizer="momentum", opt_kwargs=dict(momentum=0.2),
+                               batch_size=batch_size_for_training,
+                               verification_batch_size=1)
+
+        queue_loader_train = QueueLoader(self.plugin_config_dir, self, type=type_of_data,
+                                         batch_size=batch_size_for_training, additianl_channals=additianl_channals,
+                                         num_epochs=training_epochs, train=True)
+        queue_loader_validate = QueueLoader(self.plugin_config_dir, self, type=type_of_data,
+                                            batch_size=batch_size_for_validating,
+                                            additianl_channals=additianl_channals, num_epochs=validating_epochs, train=False)
+        place_holder = namedtuple('modelTrain', 'train_dataset test_dataset loader_train loader_test')
+        operators = place_holder(train_dataset=generator_train, test_dataset=generator_test,
+                                 loader_train=queue_loader_train, loader_test=queue_loader_validate)
+        return net, trainer, operators
+
 
 
     def execute(self):
         self.logger.addHandler(self.handler)
+        if not Path(self.ROOT_DIR).exists():
+            Path(self.ROOT_DIR).mkdir(parents=True)
         if not Path(self.MODEL_DIR).exists():
             Path(self.MODEL_DIR).mkdir(parents=True)
         if not Path(self.IMAGE_DIR).exists():
