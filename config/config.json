@@ -7,10 +7,10 @@
   "width_of_image":256,
   "height_of_image":256,
   "multi_band_size":8,
-  "root_dir":"/home/geesara/Music/test",
+  "root_dir":"/data/working/test",
   "base_train_dir":"/data/train",
   "working_dir":"/data/working",
-  "datapath":"/data/train/AOI_5_Khartoum_Train",
+  "datapath":"/data/train/AOI_3_Paris_Train",
   "tfrecords_filename_rgb_train":"rgb_segmentation_train.tfrecords",
   "tfrecords_filename_rgb_test":"rgb_segmentation_test.tfrecords",
   "tfrecords_filename_multi_train":"multi_segmentation_train.tfrecords",
@@ -48,12 +48,12 @@
   },
   "model_v16":{
     "train":{
-      "batch_size":1,
+      "batch_size":9,
       "epochs":20,
       "iterations":4
     },
     "validate":{
-      "batch_size":2,
+      "batch_size":18,
       "epochs":1,
       "iterations":4
     },

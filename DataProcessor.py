@@ -2097,10 +2097,11 @@ class DataProcessor():
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info(">> validate sub-command: {}".format(prefix))
-        if not Path(self.MODEL_DIR).exists():
-            Path(self.MODEL_DIR).mkdir(parents=True)
+        model_path=self.MODEL_DIR + "/" + prefix
+        if not Path(model_path).exists():
+            Path(model_path).mkdir(parents=True)
         self.logger.info("load valtrain")
-        trainer.train(operators, self.MODEL_DIR, training_iters, epochs_for_vaidating, display_step, restore)
+        trainer.train(operators, model_path, training_iters, epochs_for_vaidating, display_step, restore)
 
     def generate_valtest_batch(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
