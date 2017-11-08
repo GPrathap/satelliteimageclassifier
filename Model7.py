@@ -9,6 +9,7 @@ from QueueLoader import QueueLoader
 plt.rcParams['image.cmap'] = 'gist_earth'
 from collections import namedtuple
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 plugin_config = "./config/config.json"
 type_of_data="multi"

@@ -12,6 +12,7 @@ from collections import namedtuple
 plugin_config = "./config/config.json"
 type_of_data="multi"
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 dataprocessor_v12 = DataProcessor(plugin_config, base_model_name="v7", model_name="v12", image_dir="v12")
 dataprocessor_v12.execute()
