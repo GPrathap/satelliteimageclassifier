@@ -290,6 +290,11 @@ class Trainer(object):
         self.optimizer = optimizer
         self.opt_kwargs = opt_kwargs
         self.verification_batch_size = verification_batch_size
+        self.handler = logging.StreamHandler()
+        self.handler.setLevel(logging.INFO)
+        self.handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+        self.logger = logging.getLogger('spacenet')
+        self.logger.setLevel(logging.INFO)
 
     def _get_optimizer(self, training_iters, global_step):
         if self.optimizer == "momentum":
@@ -363,7 +368,7 @@ class Trainer(object):
 
         with tf.Session(config=config) as sess:
             sess.run(tf.group(tf.global_variables_initializer(), tf.local_variables_initializer()))
-            print ('Start training')
+            self.logger.info('Start training')
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(sess=sess, coord=coord)
             if write_graph:
@@ -379,7 +384,7 @@ class Trainer(object):
             test_x, test_y = operators.test_dataset(test_init_x, test_init_y)
             pred_shape = self.store_prediction(sess, test_x, test_y, "_init")
             summary_writer = tf.summary.FileWriter(output_path, graph=sess.graph)
-            logging.info("Start optimization")
+            self.logger.info("Start optimization")
             avg_gradients = None
             try:
                 ep = 0
@@ -388,12 +393,12 @@ class Trainer(object):
                 while not coord.should_stop():
                     total_loss = 0
                     epoch = epoch + 1
-                    print("------"+str(epoch))
+                    self.logger.info("Current epoch number :"+str(epoch))
                     # step = step + 1
                     for step in range((epoch * training_iters), ((epoch + 1) * training_iters)):
                         sd, fg = sess.run([operators.loader_train.images, operators.loader_train.labels])
                         batch_x, batch_y = operators.train_dataset(sd, fg)
-                        print("Next step: {} batch size ({})".format(step, sd.shape))
+                        self.logger.info("Next step: {} batch size ({})".format(step, sd.shape))
                         _, loss, lr, gradients = sess.run(
                             (self.optimizer, self.net.cost, self.learning_rate_node, self.net.gradients_node),
                             feed_dict={self.net.x: batch_x,
@@ -420,7 +425,7 @@ class Trainer(object):
                 coord.request_stop()
             coord.join(threads)
             sess.close()
-            print("save path: "+ str(final_model_path))
+            self.logger.info("save path: "+ str(final_model_path))
             return final_model_path
 
     def predictor(self, model_path, operators):
@@ -441,7 +446,7 @@ class Trainer(object):
                 while not coord.should_stop():
                     total_loss = 0
                     epoch = epoch + 1
-                    print("------" + str(epoch))
+                    self.logger.info("Current epoch number :" + str(epoch))
                     # step = step + 1
                     test_init_x, test_init_y, test_image_ids = sess.run([operators.loader_test.images,
                                                                          operators.loader_test.labels,
@@ -454,7 +459,7 @@ class Trainer(object):
                     # ax[1].imshow(test_y[0, ..., 1], aspect="auto")
                     # ax[2].imshow(predictiong[0, ..., 1], aspect="auto")
                     # plt.show()
-                    print("Next step: {} batch size ({})".format(step, test_init_x.shape))
+                    self.logger.info("Next step: {} batch size ({})".format(step, test_init_x.shape))
 
             except tf.errors.OutOfRangeError:
                 logging.info("Optimization Finished!")

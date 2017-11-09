@@ -70,12 +70,15 @@ class DataProcessor():
             self.input_image_height = int(self.plugin_config["height_of_image"])
             self.BASE_TRAIN_DIR = str(self.plugin_config["base_train_dir"])
             self.DATA_PATH = str(self.plugin_config["datapath"])
+            self.DATA_PATH_TEST = str(self.plugin_config["datapath_test"])
             self.WORKING_DIR = str(self.plugin_config["working_dir"])
             self.IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format(image_dir)
             self.LOGFORMAT = '%(asctime)s %(levelname)s %(message)s'
             self.BASE_DIR = self.ROOT_DIR + "/train"
             self.MODEL_DIR = self.ROOT_DIR + "/working/models/{}".format(self.MODEL_NAME)
             self.FN_SOLUTION_CSV = self.ROOT_DIR + "/output/{}.csv".format(self.MODEL_NAME)
+            self.FMT_TESTPOLY_PATH = self.MODEL_DIR + "/{}_poly.csv"
+            self.FN_SOLUTION_CSV = "/data/{}.csv".format(self.MODEL_NAME)
             self.FMT_TRAIN_SUMMARY_PATH = str(
                 Path(self.BASE_TRAIN_DIR) /
                 Path("{prefix:s}_Train/") /
@@ -126,14 +129,17 @@ class DataProcessor():
                 self.FMT_VALTRAIN_IMAGELIST_PATH = self.IMAGE_DIR + "/{prefix:s}_valtrain_ImageId.csv"
                 self.FMT_MUL_BANDCUT_TH_PATH = self.IMAGE_DIR + "/mul_bandcut{}.csv"
                 self.FMT_VALTEST_IMAGELIST_PATH = self.IMAGE_DIR + "/{prefix:s}_valtest_ImageId.csv"
+                self.FMT_TEST_IMAGELIST_PATH = self.IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
             else:
                 self.FMT_VALTRAIN_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_valtrain_ImageId.csv"
                 self.FMT_MUL_BANDCUT_TH_PATH = self.BASE_IMAGE_DIR + "/mul_bandcut{}.csv"
                 self.FMT_VALTEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_valtest_ImageId.csv"
+                self.FMT_TEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
+
 
             if (is_final):
                 self.FMT_TRAIN_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_train_ImageId.csv"
-                self.FMT_TEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
+                # self.FMT_TEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
                 self.V12_IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format("v12")
                 # Mask
                 self.FMT_VALTRAIN_MASK_STORE = self.V12_IMAGE_DIR + "/valtrain_{}_mask.h5"
@@ -151,7 +157,7 @@ class DataProcessor():
                 self.FMT_MUL_BANDCUT_TH_PATH = self.V12_IMAGE_DIR + "/mul_bandcut{}.csv"
 
             else:
-                self.FMT_TEST_IMAGELIST_PATH = self.IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
+                print("")
 
             self.handler = StreamHandler()
             self.handler.setLevel(INFO)
@@ -196,7 +202,7 @@ class DataProcessor():
     def createRFRecoad(self, img, annotation, image_id, writer):
         height = self.input_image_height
         width = self.input_image_width
-        print("image ---->", str(image_id), "---", "width", str(width))
+        # print("image ---->", str(image_id), "---", "width", str(width))
         channels = img.shape[2]
         mask_height = self.input_image_height
         mask_width = self.input_image_width
@@ -485,7 +491,7 @@ class DataProcessor():
                                      filters=filters)
                 ds[:] = im
 
-    def prep_rgb_image_store_test(self, area_id, datapath):
+    def prep_rgb_image_store_test(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
         bandstats = self.__load_rgb_bandstats(area_id)
 
@@ -497,7 +503,7 @@ class DataProcessor():
         self.logger.info("Image store file: {}".format(fn_store))
         with tb.open_file(fn_store, 'w') as f:
             for image_id in tqdm.tqdm(df_list.index, total=len(df_list)):
-                im = self.get_resized_3chan_image_test(image_id, datapath, bandstats)
+                im = self.get_resized_3chan_image_test(image_id, self.DATA_PATH_TEST, bandstats)
                 atom = tb.Atom.from_dtype(im.dtype)
                 filters = tb.Filters(complib='blosc', complevel=9)
                 ds = f.create_carray(f.root, image_id, atom, im.shape,
@@ -615,7 +621,7 @@ class DataProcessor():
             assert im.shape == (256, 256, 8)
             yield slice_pos, im
 
-    def prep_mul_image_store_test(self, area_id, datapath):
+    def prep_mul_image_store_test(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
         bandstats_rgb = self.__load_rgb_bandstats(area_id)
         bandstats_mul = self.__load_mul_bandstats(area_id)
@@ -630,12 +636,36 @@ class DataProcessor():
         with tb.open_file(fn_store, 'w') as f:
             for image_id in tqdm.tqdm(df_list.index, total=len(df_list)):
                 im = self.get_resized_8chan_image_test(
-                    image_id, datapath, bandstats_rgb, bandstats_mul)
+                    image_id, self.DATA_PATH_TEST, bandstats_rgb, bandstats_mul)
                 atom = tb.Atom.from_dtype(im.dtype)
                 filters = tb.Filters(complib='blosc', complevel=9)
                 ds = f.create_carray(f.root, image_id, atom, im.shape,
                                      filters=filters)
                 ds[:] = im
+
+    def prep_mul_image_store_test_v12(self, area_id):
+        prefix = self.area_id_to_prefix(area_id)
+        bandstats_mul = self.__load_mul_bandstats(area_id)
+
+        self.logger.info("prep_mul_image_store_test for ".format(prefix))
+        fn_list = self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)
+        fn_store = self.FMT_TEST_MUL_STORE.format(prefix)
+
+        df_list = pd.read_csv(fn_list, index_col='ImageId')
+
+        self.logger.info("Image store file: {}".format(fn_store))
+        with tb.open_file(fn_store, 'w') as f:
+            for image_id in tqdm.tqdm(df_list.index, total=len(df_list)):
+                for slice_pos, im in self.get_slice_8chan_im(image_id,
+                                                        self.DATA_PATH_TEST,
+                                                        bandstats_mul,
+                                                        is_test=True):
+                    slice_id = '{}_{}'.format(image_id, slice_pos)
+                    atom = tb.Atom.from_dtype(im.dtype)
+                    filters = tb.Filters(complib='blosc', complevel=9)
+                    ds = f.create_carray(f.root, slice_id, atom, im.shape,
+                                         filters=filters)
+                    ds[:] = im
 
     def get_resized_8chan_image_train(self, image_id, datapath, bs_rgb, bs_mul):
         im = []
@@ -767,12 +797,10 @@ class DataProcessor():
             self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix),
             index=False)
 
-    def prep_test_imagelist(self, area_id, datapath):
+    def prep_test_imagelist(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
-
-        image_id_list = glob.glob(str(
-            Path(datapath) /
-            Path("./PAN/PAN_{prefix:s}_*.tif")).format(prefix=prefix))
+        image_directory = self.DATA_PATH_TEST + "/PAN/PAN_{prefix:s}_*.tif".format(prefix=prefix)
+        image_id_list = glob.glob(image_directory)
         image_id_list = [path.split("PAN_")[-1][:-4] for path in image_id_list]
         pd.DataFrame({'ImageId': image_id_list}).to_csv(
             self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix),
@@ -1011,25 +1039,172 @@ class DataProcessor():
             self.logger.info("Preproc for training on {} ... done".format(prefix))
 
     def preproc_test(self):
-        area_id = self.directory_name_to_area_id(self.DATA_PATH)
+        area_id = self.directory_name_to_area_id(self.DATA_PATH_TEST)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("preproc_test for {}".format(prefix))
         if Path(self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)).exists():
             self.logger.info("Generate IMAGELIST for inference ... skip")
         else:
             self.logger.info("Generate IMAGELIST for inference")
-            self.prep_test_imagelist(area_id, self.DATA_PATH)
+            self.prep_test_imagelist(area_id)
         if Path(self.FMT_TEST_IM_STORE.format(prefix)).exists():
             self.logger.info("Generate RGB_STORE (test) ... skip")
         else:
             self.logger.info("Generate RGB_STORE (test)")
-            self.prep_rgb_image_store_test(area_id, self.DATA_PATH)
+            self.prep_rgb_image_store_test(area_id)
         if Path(self.FMT_TEST_MUL_STORE.format(prefix)).exists():
             self.logger.info("Generate MUL_STORE (test) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (test)")
-            self.prep_mul_image_store_test(area_id, self.DATA_PATH)
+            self.prep_mul_image_store_test(area_id)
             self.logger.info("preproc_test for {} ... done".format(prefix))
+
+    def preproc_test_v12(self):
+        """ test.sh """
+        area_id = self.directory_name_to_area_id(self.DATA_PATH_TEST)
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info("preproc_test for {}".format(prefix))
+
+        # Imagelist
+        assert Path(self.FMT_TEST_IMAGELIST_PATH.format(
+            prefix=prefix)).exists()
+
+        # Image HDF5 store (MUL)
+        if Path(self.FMT_TEST_MUL_STORE.format(prefix)).exists():
+            self.logger.info("Generate MUL_STORE (test) ... skip")
+        else:
+            self.logger.info("Generate MUL_STORE (test)")
+            self.prep_mul_image_store_test_v12(area_id)
+
+        self.logger.info("preproc_test for {} ... done".format(prefix))
+
+    def preproc_test_v16(self):
+        """ test.sh """
+        area_id = self.directory_name_to_area_id(self.DATA_PATH_TEST)
+        prefix = self.area_id_to_prefix(area_id)
+        osmprefix = self.area_id_to_osmprefix(area_id)
+
+        # Mkdir
+        if not Path(self.FMT_TEST_OSM_STORE.format(prefix)).parent.exists():
+            Path(self.FMT_TEST_OSM_STORE.format(prefix)).parent.mkdir(
+                parents=True)
+
+        # OSM serialized subset
+        fn_osm = self.FMT_SERIALIZED_OSMDATA.format(osmprefix)
+        if Path(fn_osm).exists():
+            self.logger.info("Serialize OSM subset ... skip")
+        else:
+            self.logger.info("Serialize OSM subset")
+            self.preproc_osm(area_id, self.DATA_PATH_TEST, is_train=False)
+
+        # OSM layers (test)
+        if Path(self.FMT_TEST_OSM_STORE.format(prefix)).exists():
+            self.logger.info("Generate OSM_STORE (test) ... skip")
+        else:
+            self.logger.info("Generate OSM_STORE (test)")
+            self.prep_osmlayer_test(area_id, self.DATA_PATH_TEST)
+
+    def _internal_pred_to_poly_file_test(self, area_id, y_pred, min_th=30):
+        prefix = self.area_id_to_prefix(area_id)
+        # Load test imagelist
+        fn_test = self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)
+        df_test = pd.read_csv(fn_test, index_col='ImageId')
+        # Make parent directory
+        fn_out = self.FMT_TESTPOLY_PATH.format(prefix)
+        if not Path(fn_out).parent.exists():
+            Path(fn_out).parent.mkdir(parents=True)
+
+        # Ensemble individual models and write out output files
+        with open(fn_out, 'w') as f:
+            f.write("ImageId,BuildingId,PolygonWKT_Pix,Confidence\n")
+            for idx, image_id in enumerate(df_test.index.tolist()):
+                df_poly = self.mask_to_poly(y_pred[idx], min_polygon_area_th=min_th)
+                if len(df_poly) > 0:
+                    for i, row in df_poly.iterrows():
+                        line = "{},{},\"{}\",{:.6f}\n".format(
+                            image_id,
+                            row.bid,
+                            row.wkt,
+                            row.area_ratio)
+                        line = self._remove_interiors(line)
+                        f.write(line)
+                else:
+                    f.write("{},{},{},0\n".format(
+                        image_id,
+                        -1,
+                        "POLYGON EMPTY"))
+
+
+
+    def get_model_parameter(self, area_id):
+        prefix = self.area_id_to_prefix(area_id)
+        fn_hist = self.FMT_VALMODEL_EVALTHHIST.format(prefix)
+        best_row = pd.read_csv(fn_hist).sort_values( by='fscore', ascending=False).iloc[0]
+        param = dict(min_poly_area=int(best_row['min_area_th']))
+        return param
+
+    def testproc(self, y_pred_0, y_pred_1, y_pred_2):
+        area_id = self.directory_name_to_area_id(self.DATA_PATH_TEST)
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info(">>>> Test proc for {}".format(prefix))
+        self.logger.info("import modules")
+        # Ensemble
+        self.logger.info("Averaging")
+        y_pred = self._internal_validate_predict_best_param_for_all(area_id, rescale_pred_list=[y_pred_0],
+                                                                    slice_pred_list=[y_pred_1, y_pred_2])
+        # pred to polygon
+        param = self.get_model_parameter(area_id)
+        self._internal_pred_to_poly_file_test(area_id, y_pred, min_th=param['min_poly_area'],)
+        self.logger.info(">>>> Test proc for {} ... done".format(prefix))
+
+    def prep_osmlayer_test(self, area_id, datapath):
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info("prep_osmlayer_test for {}".format(prefix))
+
+        fn_list = self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)
+        fn_store = self.FMT_TEST_OSM_STORE.format(prefix)
+        layers = self.extract_osmlayers(area_id)
+
+        df = pd.read_csv(fn_list, index_col='ImageId')
+        self.logger.info("Prep osm container: {}".format(fn_store))
+        with tb.open_file(fn_store, 'w') as f:
+            df_sz = len(df)
+            for image_id in tqdm.tqdm(df.index, total=df_sz):
+                # fn_tif = test_image_id_to_path(image_id)
+                fn_tif = self.get_test_image_path_from_imageid(
+                    image_id, datapath, mul=False)
+                with rasterio.open(fn_tif, 'r') as fr:
+                    values = fr.read(1)
+                    masks = []  # rasterize masks
+                    for layer_geoms in layers:
+                        mask = rasterio.features.rasterize(
+                            layer_geoms,
+                            out_shape=values.shape,
+                            transform=rasterio.guard_transform(
+                                fr.transform))
+                        masks.append(mask)
+                    masks = np.array(masks)
+                    masks = np.swapaxes(masks, 0, 2)
+                    masks = np.swapaxes(masks, 0, 1)
+                assert masks.shape == (650, 650, len(layers))
+
+                # slice of masks
+                for slice_pos in range(9):
+                    pos_j = int(math.floor(slice_pos / 3.0))
+                    pos_i = int(slice_pos % 3)
+                    x0 = self.STRIDE_SZ * pos_i
+                    y0 = self.STRIDE_SZ * pos_j
+                    im = masks[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE]
+                    assert im.shape == (256, 256, len(layers))
+                    slice_id = image_id + "_{}".format(slice_pos)
+                    atom = tb.Atom.from_dtype(im.dtype)
+                    filters = tb.Filters(complib='blosc', complevel=9)
+                    ds = f.create_carray(f.root,
+                                         slice_id,
+                                         atom,
+                                         im.shape,
+                                         filters=filters)
+                    ds[:] = im
 
     def _get_valtest_mul_data(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
@@ -1040,7 +1215,7 @@ class DataProcessor():
         fn_mask = self.FMT_VALTEST_MASK_STORE.format(prefix)
         with tb.open_file(fn_im, 'r') as f:
             with tb.open_file(fn_mask, 'r') as af:
-                for idx, image_id in enumerate(df_test.ImageId.tolist()):
+                for idx, image_id in tqdm.tqdm(enumerate(df_test.ImageId.tolist())):
                     im = np.array(f.get_node('/' + image_id))
                     im = np.swapaxes(im, 0, 2)
                     im = np.swapaxes(im, 1, 2)
@@ -1052,7 +1227,8 @@ class DataProcessor():
                     image_id_index = int(image_id_index)
                     self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
-        self.logger.info("File has been written...")
+        self.logger.info("TFRecoad for validating images has been written to "
+                         + self.tfrecords_filename_multi_test)
         return True
 
     def _get_valtrain_mul_data(self, writer):
@@ -1064,11 +1240,11 @@ class DataProcessor():
         fn_mask = self.FMT_VALTRAIN_MASK_STORE.format(prefix)
         with tb.open_file(fn_im, 'r') as f:
             with tb.open_file(fn_mask, 'r') as af:
-                for idx, image_id in enumerate(df_train.ImageId.tolist()):
+                for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
                     im = np.array(f.get_node('/' + image_id))
                     im = np.swapaxes(im, 0, 2)
                     im = np.swapaxes(im, 1, 2)
-                    coff = np.zeros([im.shape[0], im.shape[0]])
+                    # coff = np.zeros([im.shape[0], im.shape[0]])
 
                     # for i in range(0, im.shape[0]):  # rows a]re the number of rows in the matrix.
                     #     band1 = im[i].flatten()
@@ -1088,11 +1264,14 @@ class DataProcessor():
                     image_id_index = int(image_id_index)
                     self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
-        print("File has been written ")
+        self.logger.info("TFRecoad for training images has been written to "
+                         + self.tfrecords_filename_multi_train)
         return True
 
     def get_total_numberof_model_count(self, trainer):
-        model_path = trainer.get_least_model_details(self.MODEL_DIR)
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
+        prefix = self.area_id_to_prefix(area_id)
+        model_path = trainer.get_least_model_details(self.MODEL_DIR + "/"+ prefix)
         return int(model_path.split("/")[-1].replace("model-", ""))
 
     def evalfscore(self, trainer, operators, count):
@@ -1104,7 +1283,7 @@ class DataProcessor():
         for zero_base_epoch in range(1, count+1):
             self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
             enable_tqdm = False
-            path = self.MODEL_DIR + "/model-" + str(zero_base_epoch)
+            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(zero_base_epoch)
             self._internal_validate_fscore_wo_pred_file( area_id,trainer, path, operators, epoch=zero_base_epoch,
                                                          enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
@@ -1126,7 +1305,7 @@ class DataProcessor():
         for th in [30, 60, 90, 120, 150, 180, 210, 240]:
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
-            path = self.MODEL_DIR + "/model-" + str(best_epoch)
+            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
             self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
@@ -1148,7 +1327,7 @@ class DataProcessor():
         for zero_base_epoch in range(1, count + 1):
             self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
             enable_tqdm = False
-            path = self.MODEL_DIR + "/model-" + str(zero_base_epoch)
+            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(zero_base_epoch)
             self._internal_validate_fscore_wo_pred_file_v12(area_id, trainer, path, operators, epoch=zero_base_epoch,
                                                             enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
@@ -1170,7 +1349,7 @@ class DataProcessor():
         for th in [30, 60, 90, 120, 150, 180, 210, 240]:
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
-            path = self.MODEL_DIR + "/model-" + str(best_epoch)
+            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
             self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
@@ -1193,7 +1372,7 @@ class DataProcessor():
         for zero_base_epoch in range(1, count + 1):
             self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
             enable_tqdm = False
-            path = self.MODEL_DIR + "/model-" + str(zero_base_epoch)
+            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(zero_base_epoch)
             self._internal_validate_fscore_wo_pred_file_v16(area_id, trainer, path, operators, epoch=zero_base_epoch,
                                                         enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
@@ -1215,7 +1394,7 @@ class DataProcessor():
         for th in [30, 60, 90, 120, 150, 180, 210, 240]:
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
-            path = self.MODEL_DIR + "/model-" + str(best_epoch)
+            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
             self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
@@ -2036,6 +2215,62 @@ class DataProcessor():
             im_mean = np.array(f.get_node('/mulmean'))
         return im_mean
 
+    def preproc_train_v8(self):
+        """ train.sh """
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info("Preproc for training on {}".format(prefix))
+
+        # Working directory
+        working_dir = Path(self.FMT_VALTRAIN_MASK_STORE.format(prefix)).parent
+        if not working_dir.exists():
+            working_dir.mkdir(parents=True)
+
+        # Imagelist (from v5)
+        assert Path(self.FMT_VALTRAIN_IMAGELIST_PATH.format(
+            prefix=prefix)).exists()
+        assert Path(self.FMT_VALTEST_IMAGELIST_PATH.format(
+            prefix=prefix)).exists()
+
+        # Band stats (MUL)
+        assert Path(self.FMT_MUL_BANDCUT_TH_PATH.format(prefix)).exists()
+
+        # Mask (Target output)
+        if Path(self.FMT_VALTRAIN_MASK_STORE.format(prefix)).exists():
+            self.logger.info("Generate MASK (valtrain) ... skip")
+        else:
+            self.logger.info("Generate MASK (valtrain)")
+            self.prep_image_mask_v8(area_id, is_valtrain=True)
+        if Path(self.FMT_VALTEST_MASK_STORE.format(prefix)).exists():
+            self.logger.info("Generate MASK (valtest) ... skip")
+        else:
+            self.logger.info("Generate MASK (valtest)")
+            self.prep_image_mask_v12(area_id, is_valtrain=False)
+
+        # Image HDF5 store (MUL)
+        if Path(self.FMT_VALTRAIN_MUL_STORE.format(prefix)).exists():
+            self.logger.info("Generate MUL_STORE (valtrain) ... skip")
+        else:
+            self.logger.info("Generate MUL_STORE (valtrain)")
+            self.prep_mul_image_only_store_train(area_id, self.DATA_PATH, is_valtrain=True)
+        if Path(self.FMT_VALTEST_MUL_STORE.format(prefix)).exists():
+            self.logger.info("Generate MUL_STORE (valtest) ... skip")
+        else:
+            self.logger.info("Generate MUL_STORE (valtest)")
+            self.prep_mul_image_only_store_train(area_id, self.DATA_PATH, is_valtrain=False)
+
+        # Image Mean (MUL)
+        if Path(self.FMT_MULMEAN.format(prefix)).exists():
+            self.logger.info("Generate MULMEAN ... skip")
+        else:
+            self.logger.info("Generate MULMEAN")
+            # self.prep_mulmean(area_id)
+            self.prep_mulmean_v12(area_id)
+
+        # DONE!
+        self.logger.info("Preproc for training on {} ... done".format(prefix))
+
+
     def preproc_train_v12(self):
         """ train.sh """
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
@@ -2127,7 +2362,7 @@ class DataProcessor():
         with tb.open_file(fn_im, 'r') as f_im, \
                 tb.open_file(fn_osm, 'r') as f_osm, \
                 tb.open_file(fn_mask, 'r') as f_mask:
-                    for idx, image_id in enumerate(df_train.ImageId.tolist()):
+                    for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
                         for slice_pos in range(9):
                             slice_id = image_id + "_" + str(slice_pos)
                             im = np.array(f_im.get_node('/' + slice_id))
@@ -2148,7 +2383,8 @@ class DataProcessor():
                             image_id_index = int(image_id_index)
                             self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
-        self.logger.info("File has been written...")
+        self.logger.info("TFRecoad for validating for v16 images have been written to "
+                         + self.tfrecords_filename_multi_train)
         return True
 
     def generate_valtrain_batch(self, writer):
@@ -2174,7 +2410,7 @@ class DataProcessor():
         with tb.open_file(fn_im, 'r') as f_im, \
                 tb.open_file(fn_osm, 'r') as f_osm, \
                 tb.open_file(fn_mask, 'r') as f_mask:
-                    for idx, image_id in enumerate(df_train.ImageId.tolist()):
+                    for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
                         for slice_pos in range(9):
                             slice_id = image_id + "_" + str(slice_pos)
                             im = np.array(f_im.get_node('/' + slice_id))
@@ -2195,7 +2431,8 @@ class DataProcessor():
                             image_id_index = int(image_id_index)
                             self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
-        self.logger.info("File has been written...")
+        self.logger.info("TFRecoad for validating for v16 images have been written to "
+                         + self.tfrecords_filename_multi_test)
         return True
 
     def validate_v16(self, datapath):
@@ -2214,7 +2451,7 @@ class DataProcessor():
 
         with tb.open_file(fn_im, 'r') as image_list:
             with tb.open_file(fn_mask, 'r') as masks_list:
-                for idx, image_id in enumerate(df_test.ImageId.tolist()):
+                for idx, image_id in tqdm.tqdm(enumerate(df_test.ImageId.tolist())):
                     for slice_pos in range(9):
                         slice_id = image_id + "_" + str(slice_pos)
                         im = np.array(image_list.get_node('/' + slice_id))
@@ -2228,7 +2465,8 @@ class DataProcessor():
                         image_id_index = int(image_id_index)
                         self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
-        self.logger.info("File has been written...")
+        self.logger.info("TFRecoad for validating for model v12 images have been written to "
+                         + self.tfrecords_filename_multi_test)
         return True
 
     def get_valtrain_data_v12(self, writer):
@@ -2241,7 +2479,7 @@ class DataProcessor():
 
         with tb.open_file(fn_im, 'r') as image_list:
             with tb.open_file(fn_mask, 'r') as masks_list:
-                for idx, image_id in enumerate(df_train.ImageId.tolist()):
+                for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
                     for slice_pos in range(9):
                         slice_id = image_id + "_" + str(slice_pos)
                         im = np.array(image_list.get_node('/' + slice_id))
@@ -2255,7 +2493,8 @@ class DataProcessor():
                         image_id_index = int(image_id_index)
                         self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
-        self.logger.info("File has been written...")
+        self.logger.info("TFRecoad for training for model v12 images has been written to "
+                         + self.tfrecords_filename_multi_train)
         return True
 
     def _get_model_parameter(self, area_id, model_name):
@@ -2276,9 +2515,10 @@ class DataProcessor():
     def _internal_validate_predict_best_param(self, model_name, trainer, operators,
                                               enable_tqdm=False):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
+        prefix = self.area_id_to_prefix(area_id)
         param = self._get_model_parameter(area_id, model_name)
         epoch = param['fn_epoch']
-        path = self.MODEL_DIR + "/model-" + str(epoch)
+        path = self.MODEL_DIR +"/"+prefix + "/model-" + str(epoch)
         y_pred, images_ids = self._internal_validate_predict(trainer, path, operators)
         return y_pred, images_ids
 

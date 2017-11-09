@@ -37,4 +37,7 @@ dataprocessor_v17 = DataProcessor(plugin_config, base_model_name="v7", model_nam
 dataprocessor_v17.execute()
 dataprocessor_v17.evalfscore_v17(y_pred_0, y_pred_1, y_pred_2)
 
+## TODO get this thing working
+# dataprocessor_v17.testproc(y_pred_0, y_pred_1, y_pred_2)
+
 
