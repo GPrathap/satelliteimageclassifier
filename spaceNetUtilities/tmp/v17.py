@@ -306,8 +306,7 @@ def _internal_validate_predict_best_param(area_id,
                 pred_count[x0:x0+INPUT_SIZE, y0:y0+INPUT_SIZE] += 1
 
         for rescale_pred in rescale_pred_list:
-            y_pred_idx = skimage.transform.resize(
-                rescale_pred[idx][0], (650, 650))
+            y_pred_idx = skimage.transform.resize(rescale_pred[idx][0], (650, 650))
             pred_values += y_pred_idx
         pred_count += 1
 

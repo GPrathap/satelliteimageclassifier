@@ -7,20 +7,21 @@
   "width_of_image":256,
   "height_of_image":256,
   "multi_band_size":8,
+  "rgb_band":3,
+  "number_of_classes":1,
   "root_dir":"/data",
-  "base_train_dir":"/data/train",
-  "working_dir":"/data/working",
-  "datapath":"/data/train/AOI_5_Khartoum_Train",
+  "datapath_train":"/data/train/AOI_5_Khartoum_Train",
   "datapath_test":"/data/test/AOI_5_Khartoum_Test",
   "tfrecords_filename_rgb_train":"rgb_segmentation_train.tfrecords",
+  "tfrecords_filename_rgb_validate":"rgb_segmentation_validate.tfrecords",
   "tfrecords_filename_rgb_test":"rgb_segmentation_test.tfrecords",
   "tfrecords_filename_multi_train":"multi_segmentation_train.tfrecords",
+  "tfrecords_filename_multi_validate":"multi_segmentation_validate.tfrecords",
   "tfrecords_filename_multi_test":"multi_segmentation_test.tfrecords",
-  "rgb_band":3,
-  "model_v7":{
+  "model_v1":{
     "train":{
       "batch_size":1,
-      "epochs":20,
+      "epochs":5,
       "iterations":4
     },
     "validate":{
@@ -29,37 +30,43 @@
       "iterations":4
     },
     "test":{
-
+      "batch_size":2,
+      "epochs":1,
+      "iterations":1
     }
   },
-  "model_v12":{
+  "model_v2":{
     "train":{
       "batch_size":9,
-      "epochs":20,
+      "epochs":5,
       "iterations":4
     },
     "validate":{
       "batch_size":18,
       "epochs":1,
-      "iterations":4
+      "iterations":1
     },
     "test":{
-
+      "batch_size":18,
+      "epochs":1,
+      "iterations":1
     }
   },
-  "model_v16":{
+  "model_v3":{
     "train":{
       "batch_size":9,
-      "epochs":20,
+      "epochs":5,
       "iterations":4
     },
     "validate":{
       "batch_size":18,
       "epochs":1,
-      "iterations":4
+      "iterations":1
     },
     "test":{
-
+      "batch_size":18,
+      "epochs":1,
+      "iterations":1
     }
   }
 }

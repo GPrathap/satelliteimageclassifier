@@ -7,24 +7,17 @@ import numpy as np
 from PIL import Image
 
 class GISDataProvider():
-    def __init__(self, plugin_config, dataprocessor, type,additianl_channals=0, a_min=None, a_max=None, train=True):
+    def __init__(self, plugin_config, type, additianl_channals=0, a_min=None, a_max=None, train=True):
         with open(plugin_config) as plugin_config:
             self.plugin_config = json.load(plugin_config)
             self.a_min = a_min if a_min is not None else -np.inf
             self.a_max = a_max if a_min is not None else np.inf
             if(type=="rgb"):
                 self.channels = 3
-                if(train):
-                    self.file_name = dataprocessor.tfrecords_filename_rgb_train
-                else:
-                    self.file_name =  dataprocessor.tfrecords_filename_rgb_test
             else:
                 self.channels = int(self.plugin_config["multi_band_size"]) + additianl_channals
-                if (train):
-                    self.file_name = dataprocessor.tfrecords_filename_multi_train
-                else:
-                    self.file_name = dataprocessor.tfrecords_filename_multi_test
-            self.classes = 2
+
+            self.classes = 1
             self.width = int(self.plugin_config["width_of_image"])
             self.height = int(self.plugin_config["height_of_image"])
 
@@ -37,19 +30,16 @@ class GISDataProvider():
         return train_data.reshape(1, ny, nx, self.channels), labels.reshape(1, ny, nx, self.classes),
 
     def _process_labels(self, label):
-        if self.classes == 2:
-            nx = label.shape[1]
-            ny = label.shape[0]
-            labels = np.zeros((ny, nx, self.classes), dtype=np.float32)
-            labels[..., 1] = label
-            labels[..., 0] = ~label
-            return labels
+        # if self.classes == 2:
+        #     nx = label.shape[1]
+        #     ny = label.shape[0]
+        #     labels = np.zeros((ny, nx, self.classes), dtype=np.float32)
+        #     labels[..., 1] = label
+        #     labels[..., 0] = ~label
+        #     return labels
         return label
 
     def _process_data(self, data):
-        data = np.clip(np.fabs(data), self.a_min, self.a_max)
-        # data -= np.amin(data)
-        # data /= np.amax(data)
         return data
 
     def _post_process(self, data, labels):

@@ -15,7 +15,7 @@ from tf_unetnew.tf_unet.layers import (weight_variable, weight_variable_devonc, 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
-def create_conv_net(x, keep_prob, channels, n_class, layers=3, features_root=16,
+def create_conv_net(x, keep_prob, channels, n_class, phase, layers=3, features_root=16,
                     filter_size=3, pool_size=2, summaries=True):
     """
     Creates a new convolutional unet for the given parametrization.
@@ -68,7 +68,11 @@ def create_conv_net(x, keep_prob, channels, n_class, layers=3, features_root=16,
         conv1 = conv2d(in_node, w1, keep_prob)
         tmp_h_conv = tf.nn.relu(conv1 + b1)
         conv2 = conv2d(tmp_h_conv, w2, keep_prob)
-        dw_h_convs[layer] = tf.nn.relu(conv2 + b2)
+        # todo adding batch normalization layer
+        norm2 = tf.contrib.layers.batch_norm(conv2,
+                                             center=True, scale=True,
+                                             is_training=phase)
+        dw_h_convs[layer] = tf.nn.relu(norm2 + b2)
         
         weights.append((w1, w2))
         biases.append((b1, b2))
@@ -101,7 +105,10 @@ def create_conv_net(x, keep_prob, channels, n_class, layers=3, features_root=16,
         conv1 = conv2d(h_deconv_concat, w1, keep_prob)
         h_conv = tf.nn.relu(conv1 + b1)
         conv2 = conv2d(h_conv, w2, keep_prob)
-        in_node = tf.nn.relu(conv2 + b2)
+        norm2 = tf.contrib.layers.batch_norm(conv2,
+                                             center=True, scale=True,
+                                             is_training=phase)
+        in_node = tf.nn.relu(norm2 + b2)
         up_h_convs[layer] = in_node
 
         weights.append((w1, w2))
@@ -117,6 +124,14 @@ def create_conv_net(x, keep_prob, channels, n_class, layers=3, features_root=16,
     conv = conv2d(in_node, weight, tf.constant(1.0))
     output_map = tf.nn.relu(conv + bias)
     up_h_convs["out"] = output_map
+    # tf.nn.batch_normalization
+
+    # weight = weight_variable([1, 1, features_root, n_class], stddev)
+    # bias = bias_variable([n_class])
+    # conv = conv2d(in_node, weight, tf.constant(1.0))
+    # _pool2 = tf.nn.avg_pool(conv + bias, ksize=[1, 1, 1, 1], strides=[1, 1, 1, 1], padding='SAME')
+    # _layer2 = tf.nn.dropout(_pool2, tf.constant(1.0))
+    # output_map = _layer2
     
     if summaries:
         for i, (c1, c2) in enumerate(convs):
@@ -165,14 +180,15 @@ class Unet(object):
         self.x = tf.placeholder("float", shape=[None, None, None, channels])
         self.y = tf.placeholder("float", shape=[None, None, None, n_class])
         self.keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
-        logits, self.variables, self.offset = create_conv_net(self.x, self.keep_prob, channels,
-                                                              n_class, **kwargs)
-        self.cost = self._get_cost(logits, cost, cost_kwargs)
+        self.phase = tf.placeholder(tf.bool)
+        self.logits, self.variables, self.offset = create_conv_net(self.x, self.keep_prob, channels,
+                                                              n_class, self.phase,  **kwargs)
+        self.cost = self._get_cost(self.logits, cost, cost_kwargs)
         self.gradients_node = tf.gradients(self.cost, self.variables)
         self.cross_entropy = tf.reduce_mean(cross_entropy(tf.reshape(self.y, [-1, n_class]),
-                                                          tf.reshape(pixel_wise_softmax_2(logits),
+                                                          tf.reshape(pixel_wise_softmax_2(self.logits),
                                                                      [-1, n_class])))
-        self.predicter = pixel_wise_softmax_2(logits)
+        self.predicter = pixel_wise_softmax_2(self.logits)
         self.correct_pred = tf.equal(tf.argmax(self.predicter, 3), tf.argmax(self.y, 3))
         self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32))
         self.jaccard_coef_cal = self.jaccard_coef(self.y, self.predicter)
@@ -249,7 +265,7 @@ class Unet(object):
             self.restore(sess, model_path)
             y_dummy = np.empty((x_test.shape[0], x_test.shape[1], x_test.shape[2], self.n_class))
             prediction = sess.run(self.predicter, feed_dict={self.x: x_test, self.y: y_dummy,
-                                                             self.keep_prob: 1.})
+                                                             self.keep_prob: 1., self.phase: 1})
         return prediction
     
     def save(self, sess, model_path, epoch):
@@ -403,7 +419,8 @@ class Trainer(object):
                             (self.optimizer, self.net.cost, self.learning_rate_node, self.net.gradients_node),
                             feed_dict={self.net.x: batch_x,
                                        self.net.y: util.crop_to_shape(batch_y, pred_shape),
-                                       self.net.keep_prob: dropout})
+                                       self.net.keep_prob: dropout,
+                                       self.net.phase:1})
                         if self.net.summaries and self.norm_grads:
                             avg_gradients = _update_avg_gradients(avg_gradients, gradients, step)
                             norm_gradients = [np.linalg.norm(gradient) for gradient in avg_gradients]
@@ -428,7 +445,7 @@ class Trainer(object):
             self.logger.info("save path: "+ str(final_model_path))
             return final_model_path
 
-    def predictor(self, model_path, operators):
+    def predictor(self, model_path, operators, testing=False):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         predictiong = []
@@ -471,15 +488,60 @@ class Trainer(object):
             print("save path: " + str(model_path))
             return predictiong, test_image_ids
 
+    def testor(self, model_path, operators):
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        predictiong = []
+        test_image_ids = []
+        with tf.Session(config=config) as sess:
+            sess.run(tf.group(tf.global_variables_initializer(), tf.local_variables_initializer()))
+            coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+            # test_init_x, test_init_y = sess.run([operators.loader_test.images, operators.loader_test.labels])
+            # test_x, test_y = operators.test_dataset(test_init_x, test_init_y)
+            try:
+                ep = 0
+                step = 0
+                epoch = -1
+                while not coord.should_stop():
+                    total_loss = 0
+                    epoch = epoch + 1
+                    self.logger.info("Current epoch number :" + str(epoch))
+                    # step = step + 1
+                    test_init_x, test_init_y, test_image_ids = sess.run([operators.loader_test.images,
+                                                                         operators.loader_test.labels,
+                                                                         operators.loader_test.image_ids])
+                    print(test_image_ids)
+                    test_x, test_y = operators.test_dataset(test_init_x, test_init_y)
+                    predictiong = self.net.predict(model_path, test_x)
+
+                    # # fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+                    # ax[0].imshow(test_x[0, ..., 0], aspect="auto")
+                    # ax[1].imshow(test_y[0, ..., 1], aspect="auto")
+                    # ax[2].imshow(predictiong[0, ..., 1], aspect="auto")
+                    # plt.show()
+                    self.logger.info("Next step: {} batch size ({})".format(step, test_init_x.shape))
+
+            except tf.errors.OutOfRangeError:
+                logging.info("Optimization Finished!")
+                print ('\nDone training, epoch limit: %d reached.' % (1))
+            finally:
+                coord.request_stop()
+            coord.join(threads)
+            sess.close()
+            print("save path: " + str(model_path))
+            return predictiong, test_image_ids
+
 
     def store_prediction(self, sess, batch_x, batch_y, name):
         prediction = sess.run(self.net.predicter, feed_dict={self.net.x: batch_x, 
                                                              self.net.y: batch_y, 
-                                                             self.net.keep_prob: 1.})
+                                                             self.net.keep_prob: 1.,
+                                                             self.net.phase:0})
         pred_shape = prediction.shape
         loss = sess.run(self.net.cost, feed_dict={self.net.x: batch_x, 
                                                        self.net.y: util.crop_to_shape(batch_y, pred_shape), 
-                                                       self.net.keep_prob: 1.})
+                                                       self.net.keep_prob: 1., self.net.phase:0})
         
         logging.info("Verification error= {:.1f}%, loss= {:.4f}".format(error_rate(prediction,
                                                                           util.crop_to_shape(batch_y,
@@ -502,7 +564,8 @@ class Trainer(object):
                                                             self.net.predicter], 
                                                            feed_dict={self.net.x: batch_x,
                                                                       self.net.y: batch_y,
-                                                                      self.net.keep_prob: 1.})
+                                                                      self.net.keep_prob: 1.,
+                                                                      self.net.phase:1})
         summary_writer.add_summary(summary_str, step)
         summary_writer.flush()
         logging.info("Iter {:}, Minibatch Loss= {:.4f}, Minibatch jaccard_coef= {:.4f}, "

@@ -81,7 +81,7 @@ y_pred_2, images_idsv16 = dataprocessor_v16._internal_validate_predict_best_para
 # dataprocessor_v17.execute()
 #
 #
-# # dataprocessor_v7.validate(datapath, trainer_v7, operators_v7, training_iters=4, num_epochs=epochs, display_step=2,
+# # dataprocessor_v1.validate(datapath, trainer_v1, operators_v1, training_iters=4, num_epochs=epochs, display_step=2,
 # #                        restore=True)
 #
 # # dataprocessor.evalfscore(datapath, trainer, operators, 3)

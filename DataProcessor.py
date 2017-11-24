@@ -68,10 +68,8 @@ class DataProcessor():
             self.INPUT_SIZE =  int(self.plugin_config["width_of_image"])
             self.input_image_width = int(self.plugin_config["width_of_image"])
             self.input_image_height = int(self.plugin_config["height_of_image"])
-            self.BASE_TRAIN_DIR = str(self.plugin_config["base_train_dir"])
-            self.DATA_PATH = str(self.plugin_config["datapath"])
+            self.DATA_PATH = str(self.plugin_config["datapath_train"])
             self.DATA_PATH_TEST = str(self.plugin_config["datapath_test"])
-            self.WORKING_DIR = str(self.plugin_config["working_dir"])
             self.IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format(image_dir)
             self.LOGFORMAT = '%(asctime)s %(levelname)s %(message)s'
             self.BASE_DIR = self.ROOT_DIR + "/train"
@@ -79,6 +77,8 @@ class DataProcessor():
             self.FN_SOLUTION_CSV = self.ROOT_DIR + "/output/{}.csv".format(self.MODEL_NAME)
             self.FMT_TESTPOLY_PATH = self.MODEL_DIR + "/{}_poly.csv"
             self.FN_SOLUTION_CSV = "/data/{}.csv".format(self.MODEL_NAME)
+            self.TRAINING_DIRECTORY = self.area_id_to_prefix(self.directory_name_to_area_id(self.DATA_PATH))
+            self.BASE_TRAIN_DIR = self.DATA_PATH.replace(self.TRAINING_DIRECTORY + "_Train", "")
             self.FMT_TRAIN_SUMMARY_PATH = str(
                 Path(self.BASE_TRAIN_DIR) /
                 Path("{prefix:s}_Train/") /
@@ -117,8 +117,8 @@ class DataProcessor():
             self.FMT_TRAIN_OSM_STORE = self.IMAGE_DIR + "/train_{}_osm.h5"
             self.FMT_TEST_OSM_STORE = self.IMAGE_DIR + "/test_{}_osm.h5"
             self.FMT_OSM_MEAN = self.IMAGE_DIR + "/{}_osmmean.h5"
-            self.FMT_OSMSHAPEFILE = self.WORKING_DIR + "/osmdata/{name:}/{name:}_{layer:}.shp"
-            self.FMT_SERIALIZED_OSMDATA = self.WORKING_DIR + "/osm_{}_subset.pkl"
+            self.FMT_OSMSHAPEFILE = self.ROOT_DIR + "/osmdata/{name:}/{name:}_{layer:}.shp"
+            self.FMT_SERIALIZED_OSMDATA = self.ROOT_DIR + "/osm_{}_subset.pkl"
             self.LAYER_NAMES = [
                 'buildings',
                 'landusages',
@@ -140,7 +140,7 @@ class DataProcessor():
             if (is_final):
                 self.FMT_TRAIN_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_train_ImageId.csv"
                 # self.FMT_TEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
-                self.V12_IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format("v12")
+                self.V12_IMAGE_DIR = self.ROOT_DIR + "/working/images/{}".format("v2")
                 # Mask
                 self.FMT_VALTRAIN_MASK_STORE = self.V12_IMAGE_DIR + "/valtrain_{}_mask.h5"
                 self.FMT_VALTEST_MASK_STORE = self.V12_IMAGE_DIR + "/valtest_{}_mask.h5"
@@ -195,9 +195,11 @@ class DataProcessor():
             self.FMT_BANDCUT_TH_PATH = self.IMAGE_DIR + "/bandcut{}.csv"
 
             self.tfrecords_filename_rgb_train = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_rgb_train"])
-            self.tfrecords_filename_rgb_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_rgb_test"])
+            self.tfrecords_filename_rgb_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_rgb_validate"])
+            self.tfrecords_filename_rgb_final_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_rgb_test"])
             self.tfrecords_filename_multi_train = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_multi_train"])
-            self.tfrecords_filename_multi_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_multi_test"])
+            self.tfrecords_filename_multi_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_multi_validate"])
+            self.tfrecords_filename_multi_final_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_multi_test"])
 
     def createRFRecoad(self, img, annotation, image_id, writer):
         height = self.input_image_height
@@ -491,7 +493,7 @@ class DataProcessor():
                                      filters=filters)
                 ds[:] = im
 
-    def prep_rgb_image_store_test(self, area_id):
+    def prep_rgb_image_store_test(self, area_id, writer):
         prefix = self.area_id_to_prefix(area_id)
         bandstats = self.__load_rgb_bandstats(area_id)
 
@@ -509,6 +511,11 @@ class DataProcessor():
                 ds = f.create_carray(f.root, image_id, atom, im.shape,
                                      filters=filters)
                 ds[:] = im
+                image_id_prefix = prefix + "_img"
+                image_id_index = image_id.replace(image_id_prefix, "")
+                image_id_index = int(image_id_index)
+                mask=np.array([1,1]).astype(np.uint8)
+                self.createRFRecoad( im, mask, image_id_index, writer)
 
     def get_resized_3chan_image_train(self, image_id, datapath, bandstats):
         fn = self.get_train_image_path_from_imageid(image_id, datapath)
@@ -612,16 +619,34 @@ class DataProcessor():
         values = np.swapaxes(values, 0, 1)
         assert values.shape == (650, 650, 8)
 
+        # fig, ax = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+        # imageInfo = np.array(values)
+        # drawrgbonly= imageInfo[:,:,0:3]
+        # ax.imshow(drawrgbonly, aspect="auto")
+        # ax.xaxis.set_visible(False)
+        # ax.yaxis.set_visible(False)
+        #
+        # fig, ax1 = plt.subplots(3, 3, sharey=True, figsize=(6, 6))
+        indexx=-1
         for slice_pos in range(9):
             pos_j = int(math.floor(slice_pos / 3.0))
             pos_i = int(slice_pos % 3)
+            if(pos_i==0):
+                indexx=indexx+1
             x0 = self.STRIDE_SZ * pos_i
             y0 = self.STRIDE_SZ * pos_j
             im = values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE]
             assert im.shape == (256, 256, 8)
+
+            # imageInfo1 = np.array(im)
+            # drawrgbonly1 = imageInfo1[:, :, 0:3]
+            # ax1[indexx, pos_i].imshow(drawrgbonly1, aspect="auto")
+            # ax1[indexx, pos_i].xaxis.set_visible(False)
+            # ax1[indexx, pos_i].yaxis.set_visible(False)
+
             yield slice_pos, im
 
-    def prep_mul_image_store_test(self, area_id):
+    def prep_mul_image_store_test(self, area_id, writer):
         prefix = self.area_id_to_prefix(area_id)
         bandstats_rgb = self.__load_rgb_bandstats(area_id)
         bandstats_mul = self.__load_mul_bandstats(area_id)
@@ -643,7 +668,14 @@ class DataProcessor():
                                      filters=filters)
                 ds[:] = im
 
-    def prep_mul_image_store_test_v12(self, area_id):
+                image_id_prefix = prefix + "_img"
+                image_id_index = image_id.replace(image_id_prefix, "")
+                image_id_index = int(image_id_index)
+                mask = np.zeros([256, 256]).astype(np.uint8)
+                self.createRFRecoad(im, mask, image_id_index, writer)
+            writer.close()
+
+    def prep_mul_image_store_test_v12(self, area_id, writer):
         prefix = self.area_id_to_prefix(area_id)
         bandstats_mul = self.__load_mul_bandstats(area_id)
 
@@ -666,6 +698,14 @@ class DataProcessor():
                     ds = f.create_carray(f.root, slice_id, atom, im.shape,
                                          filters=filters)
                     ds[:] = im
+                    image_id_prefix = prefix + "_img"
+                    image_id_index = image_id.replace(image_id_prefix, "")
+                    image_id_index = int(image_id_index)
+                    im = im.astype(np.float64)
+                    mask = np.zeros([256, 256]).astype(np.uint8)
+                    self.createRFRecoad(im, mask, image_id_index, writer)
+            writer.close()
+
 
     def get_resized_8chan_image_train(self, image_id, datapath, bs_rgb, bs_mul):
         im = []
@@ -678,9 +718,17 @@ class DataProcessor():
                 max_val = bs_rgb[chan_i]['max']
                 values[chan_i] = np.clip(values[chan_i], min_val, max_val)
                 values[chan_i] = (values[chan_i] - min_val) / (max_val - min_val)
+                # if(chan_i==2):
+                #     fig, ax = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+                #     imageInfo = np.array(values)
+                #     drawrgbonly = imageInfo.transpose()
+                #     ax.imshow(drawrgbonly, aspect="auto")
+
                 im.append(skimage.transform.resize(
                     values[chan_i],
                     (self.INPUT_SIZE, self.INPUT_SIZE)))
+
+
 
         fn = self.get_train_image_path_from_imageid(image_id, datapath, mul=True)
         with rasterio.open(fn, 'r') as f:
@@ -698,6 +746,12 @@ class DataProcessor():
         im = np.array(im)  # (ch, w, h)
         im = np.swapaxes(im, 0, 2)  # -> (h, w, ch)
         im = np.swapaxes(im, 0, 1)  # -> (w, h, ch)
+
+        # fig, ax = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+        # imageInfo = np.array(im)
+        # drawrgbonly= imageInfo[:,:,0:3]
+        # ax.imshow(drawrgbonly, aspect="auto")
+
         return im
 
     def get_resized_8chan_image_test(self, image_id, datapath, bs_rgb, bs_mul):
@@ -1038,7 +1092,7 @@ class DataProcessor():
             self.prep_mulmean(area_id)
             self.logger.info("Preproc for training on {} ... done".format(prefix))
 
-    def preproc_test(self):
+    def preproc_test(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH_TEST)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info("preproc_test for {}".format(prefix))
@@ -1047,19 +1101,19 @@ class DataProcessor():
         else:
             self.logger.info("Generate IMAGELIST for inference")
             self.prep_test_imagelist(area_id)
-        if Path(self.FMT_TEST_IM_STORE.format(prefix)).exists():
-            self.logger.info("Generate RGB_STORE (test) ... skip")
-        else:
-            self.logger.info("Generate RGB_STORE (test)")
-            self.prep_rgb_image_store_test(area_id)
+        # if Path(self.FMT_TEST_IM_STORE.format(prefix)).exists():
+        #     self.logger.info("Generate RGB_STORE (test) ... skip")
+        # else:
+        #     self.logger.info("Generate RGB_STORE (test)")
+        #     self.prep_rgb_image_store_test(area_id, writer)
         if Path(self.FMT_TEST_MUL_STORE.format(prefix)).exists():
             self.logger.info("Generate MUL_STORE (test) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (test)")
-            self.prep_mul_image_store_test(area_id)
+            self.prep_mul_image_store_test(area_id, writer)
             self.logger.info("preproc_test for {} ... done".format(prefix))
 
-    def preproc_test_v12(self):
+    def preproc_test_v2(self, writer):
         """ test.sh """
         area_id = self.directory_name_to_area_id(self.DATA_PATH_TEST)
         prefix = self.area_id_to_prefix(area_id)
@@ -1074,11 +1128,58 @@ class DataProcessor():
             self.logger.info("Generate MUL_STORE (test) ... skip")
         else:
             self.logger.info("Generate MUL_STORE (test)")
-            self.prep_mul_image_store_test_v12(area_id)
+            self.prep_mul_image_store_test_v12(area_id, writer)
 
         self.logger.info("preproc_test for {} ... done".format(prefix))
 
-    def preproc_test_v16(self):
+    def generate_test_batch(self, writer):
+
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
+        prefix = self.area_id_to_prefix(area_id)
+        df_train = pd.read_csv(self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix))
+        fn_im = self.FMT_TEST_MUL_STORE.format(prefix)
+        fn_osm = self.FMT_TEST_OSM_STORE.format(prefix)
+        self.logger.info(">> validate sub-command: {}".format(prefix))
+        dict_n_osm_layers = {
+            2: 4,
+            3: 4,
+            4: 4,
+            5: 4,
+        }
+        osm_layers = dict_n_osm_layers[area_id]
+        self.logger.info("Validate step for {}".format(prefix))
+        X_mean = self.get_mul_mean_image(area_id)
+        X_osm_mean = np.zeros((osm_layers, self.INPUT_SIZE, self.INPUT_SIZE))
+        immean = np.vstack([X_mean, X_osm_mean])
+
+        with tb.open_file(fn_im, 'r') as f_im, tb.open_file(fn_osm, 'r') as f_osm:
+            for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
+                for slice_pos in range(9):
+                    slice_id = image_id + "_" + str(slice_pos)
+                    im = np.array(f_im.get_node('/' + slice_id))
+                    im = np.swapaxes(im, 0, 2)
+                    im = np.swapaxes(im, 1, 2)
+                    im2 = np.array(f_osm.get_node('/' + slice_id))
+                    im2 = np.swapaxes(im2, 0, 2)
+                    im2 = np.swapaxes(im2, 1, 2)
+
+                    im = np.vstack([im, im2])
+                    im = im - immean
+                    im = np.transpose(im).astype(np.float64)
+
+                    image_id_prefix = prefix + "_img"
+                    image_id_index = image_id.replace(image_id_prefix, "")
+                    image_id_index = int(image_id_index)
+
+                    mask = np.zeros([self.INPUT_SIZE, self.INPUT_SIZE]).astype(np.uint8)
+                    self.createRFRecoad(im, mask, image_id_index, writer)
+
+        writer.close()
+        self.logger.info("TFRecoad for testing for v3 images have been written to "
+                         + self.tfrecords_filename_multi_final_test)
+        return True
+
+    def preproc_test_v3(self, writer):
         """ test.sh """
         area_id = self.directory_name_to_area_id(self.DATA_PATH_TEST)
         prefix = self.area_id_to_prefix(area_id)
@@ -1103,6 +1204,9 @@ class DataProcessor():
         else:
             self.logger.info("Generate OSM_STORE (test)")
             self.prep_osmlayer_test(area_id, self.DATA_PATH_TEST)
+
+        self.logger.info("Generate Test Image (test)")
+        self.generate_test_batch(writer)
 
     def _internal_pred_to_poly_file_test(self, area_id, y_pred, min_th=30):
         prefix = self.area_id_to_prefix(area_id)
@@ -1190,6 +1294,7 @@ class DataProcessor():
 
                 # slice of masks
                 for slice_pos in range(9):
+
                     pos_j = int(math.floor(slice_pos / 3.0))
                     pos_i = int(slice_pos % 3)
                     x0 = self.STRIDE_SZ * pos_i
@@ -1205,6 +1310,11 @@ class DataProcessor():
                                          im.shape,
                                          filters=filters)
                     ds[:] = im
+                    image_id_prefix = prefix + "_img"
+                    image_id_index = image_id.replace(image_id_prefix, "")
+                    image_id_index = int(image_id_index)
+                    mask = np.zeros([256, 256]).astype(np.uint8)
+                    im = im.astype(np.float64)
 
     def _get_valtest_mul_data(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
@@ -1306,7 +1416,7 @@ class DataProcessor():
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
             path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
-            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
+            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=th)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
             evaluate_record['min_area_th'] = th
@@ -1350,7 +1460,8 @@ class DataProcessor():
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
             path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
-            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
+            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True,
+                                           min_th=th)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
             evaluate_record['min_area_th'] = th
@@ -1395,7 +1506,7 @@ class DataProcessor():
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
             path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
-            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=30)
+            self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=th)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
             evaluate_record['min_area_th'] = th
@@ -1412,7 +1523,8 @@ class DataProcessor():
         prefix = self.area_id_to_prefix(area_id)
         # Prediction phase
         self.logger.info("Prediction phase")
-        predicted_result, test_image_ids = self._internal_validate_predict(trainer, path, operators, save_pred=True)
+        predicted_result, test_image_ids = self._internal_validate_predict(trainer, path, operators,
+                                                                           save_pred=True)
         fn = self.FMT_VALTESTPRED_PATH.format(prefix)
         with tb.open_file(fn, 'w') as f:
             atom = tb.Atom.from_dtype(predicted_result.dtype)
@@ -1995,7 +2107,7 @@ class DataProcessor():
                 pickle.dump(geom_layers, f)
 
 
-    def preproc_train_v16(self):
+    def preproc_train_v3(self):
         """ train.sh """
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
@@ -2133,7 +2245,6 @@ class DataProcessor():
         elif area_id == 3:
             return [
                 self.extract_buildings_geoms(area_id),
-                self.extract_landusages_farm_and_forest_geoms(area_id),
                 self.extract_landusages_industrial_geoms(area_id),
                 self.extract_landusages_residential_geoms(area_id),
                 self.extract_roads_geoms(area_id),
@@ -2178,12 +2289,20 @@ class DataProcessor():
                 with rasterio.open(fn_tif, 'r') as fr:
                     values = fr.read(1)
                     masks = []  # rasterize masks
+                    fig, ax1 = plt.subplots(1, 6, sharey=True, figsize=(5, 5))
+                    cou=0
                     for layer_geoms in layers:
                         mask = rasterio.features.rasterize(
                             layer_geoms,
                             out_shape=values.shape,
                             transform=rasterio.guard_transform(
                                 fr.transform))
+                        imageInfo1 = np.array(mask)
+                        drawrgbonly1 = imageInfo1
+                        ax1[cou].imshow(drawrgbonly1, aspect="auto")
+                        ax1[cou].xaxis.set_visible(False)
+                        ax1[cou].yaxis.set_visible(False)
+                        cou=cou+1
                         masks.append(mask)
                     masks = np.array(masks)
                     masks = np.swapaxes(masks, 0, 2)
@@ -2271,7 +2390,7 @@ class DataProcessor():
         self.logger.info("Preproc for training on {} ... done".format(prefix))
 
 
-    def preproc_train_v12(self):
+    def preproc_train_v2(self):
         """ train.sh """
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
@@ -2337,6 +2456,21 @@ class DataProcessor():
             Path(model_path).mkdir(parents=True)
         self.logger.info("load valtrain")
         trainer.train(operators, model_path, training_iters, epochs_for_vaidating, display_step, restore)
+
+    def test(self, trainer, operators, training_iters=4, display_step=2, restore=True):
+        model_name = "model_" + self.MODEL_NAME
+        epochs_for_vaidating = int(self.plugin_config[model_name]["validate"]["epochs"])
+        area_id = self.directory_name_to_area_id(self.DATA_PATH)
+        prefix = self.area_id_to_prefix(area_id)
+        self.logger.info(">> validate sub-command: {}".format(prefix))
+        model_path=self.MODEL_DIR + "/" + prefix
+        df_evalhist = pd.read_csv(self.FMT_VALMODEL_EVALHIST.format(prefix))
+        best_row = df_evalhist.sort_values(by='fscore', ascending=False).iloc[0]
+        best_epoch = int(best_row.zero_base_epoch)
+        path = self.MODEL_DIR + "/" + prefix + "/model-" + str(best_epoch)
+        self.logger.info("load valtrain")
+        return trainer.testor(path, operators)
+
 
     def generate_valtest_batch(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
@@ -2441,7 +2575,7 @@ class DataProcessor():
         self.logger.info("load valtrain")
         self.logger.info("Instantiate U-Net model")
 
-    def get_valtest_data_v12(self, writer):
+    def get_valtest_data_v2(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         fn_test = self.FMT_VALTEST_IMAGELIST_PATH.format(prefix=prefix)
@@ -2469,7 +2603,7 @@ class DataProcessor():
                          + self.tfrecords_filename_multi_test)
         return True
 
-    def get_valtrain_data_v12(self, writer):
+    def get_valtrain_data_v2(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         fn_train = self.FMT_VALTRAIN_IMAGELIST_PATH.format(prefix=prefix)
@@ -2655,14 +2789,14 @@ class DataProcessor():
         validating_epochs = int(self.plugin_config[model_name]["validate"]["epochs"])
         # batch_size_for_net = int(self.plugin_config[model_name]["train"]["batch_size"])
         additianl_channals = 0
-        if self.MODEL_NAME == "v16":
+        if self.MODEL_NAME == "v3":
             additianl_channals = 4
-        generator_train = GISDataProvider(self.plugin_config_dir, self,
+        generator_train = GISDataProvider(self.plugin_config_dir,
                                           additianl_channals=additianl_channals,
-                                          type=type_of_data, train=True)
-        generator_test = GISDataProvider(self.plugin_config_dir, self,
+                                          type=type_of_data)
+        generator_test = GISDataProvider(self.plugin_config_dir,
                                          additianl_channals=additianl_channals,
-                                         type=type_of_data, train=False)
+                                         type=type_of_data)
 
         net = unet.Unet(channels=generator_train.channels, n_class=generator_train.classes, layers=3,
                         features_root=16)
@@ -2675,12 +2809,42 @@ class DataProcessor():
                                          num_epochs=training_epochs, train=True)
         queue_loader_validate = QueueLoader(self.plugin_config_dir, self, type=type_of_data,
                                             batch_size=batch_size_for_validating,
-                                            additianl_channals=additianl_channals, num_epochs=validating_epochs, train=False)
+                                            additianl_channals=additianl_channals, num_epochs=validating_epochs,
+                                            train=False, test=False)
+
         place_holder = namedtuple('modelTrain', 'train_dataset test_dataset loader_train loader_test')
         operators = place_holder(train_dataset=generator_train, test_dataset=generator_test,
                                  loader_train=queue_loader_train, loader_test=queue_loader_validate)
         return net, trainer, operators
 
+
+    def get_test_model(self, type_of_data):
+
+        model_name = "model_"+self.MODEL_NAME
+        batch_size_for_testing = int(self.plugin_config[model_name]["test"]["batch_size"])
+        testing_epochs = int(self.plugin_config[model_name]["test"]["epochs"])
+        additianl_channals = 0
+        if self.MODEL_NAME == "v3":
+            additianl_channals = 4
+
+        generator_test = GISDataProvider(self.plugin_config_dir,
+                                         additianl_channals=additianl_channals,
+                                         type=type_of_data)
+
+        net = unet.Unet(channels=generator_test.channels, n_class=generator_test.classes, layers=3,
+                        features_root=16)
+        trainer = unet.Trainer(net, optimizer="momentum", opt_kwargs=dict(momentum=0.2),
+                               batch_size=batch_size_for_testing,
+                               verification_batch_size=1)
+
+        queue_loader_test = QueueLoader(self.plugin_config_dir, self, type=type_of_data,
+                                             batch_size=batch_size_for_testing,
+                                             additianl_channals=additianl_channals, num_epochs=testing_epochs,
+                                             train=False, test=True)
+
+        place_holder = namedtuple('modelTest', 'test_dataset loader_test')
+        operators = place_holder(test_dataset=generator_test, loader_test=queue_loader_test)
+        return net, trainer, operators
 
 
     def execute(self):
