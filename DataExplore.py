@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 import glob
 import json
 import os
@@ -7,10 +8,11 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-import geojson_to_pixel_arr, create_dist_map, \
-    create_building_mask, \
-        plot_truth_coords, plot_building_mask, plot_dist_transform, \
-        plot_all_transforms
+
+
+from spaceNetUtilities import create_building_mask, create_dist_map, geojson_to_pixel_arr
+from visualizer import plot_dist_transform, plot_truth_coords, plot_building_mask, plot_all_transforms
+
 
 class DataExplore():
 
@@ -132,7 +134,8 @@ class DataExplore():
         self.plot_result()
 
 
-plugin_config = "/home/geesara/project/satelliteimageclassifier/config/config.json"
+plugin_config = "./config/config.json"
 data_explore_util = DataExplore(plugin_config)
-data_explore_util.plot_mapping_of_image_given_by_name('/home/geesara/project/satelliteimageclassifier/result/3band/3band_AOI_1_RIO_img2149.tif')
+data_explore_util.plot_mapping_of_image_given_by_name('./result/3band/3band_AOI_1_RIO_img1008.tif')
+# data_explore_util.plot_mapping_of_image_given_by_name('/data/train/AOI_5_Khartoum_Train/RGB-PanSharpen/RGB-PanSharpen_AOI_5_Khartoum_img1.tif')
 # data_explore_util.execute()

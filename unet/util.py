@@ -1,10 +1,10 @@
 
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 def plot_prediction(x_test, y_test, prediction, save=False):
-    import matplotlib
-    import matplotlib.pyplot as plt
+
     
     test_size = x_test.shape[0]
     fig, ax = plt.subplots(test_size, 3, figsize=(12,12), sharey=True, sharex=True)

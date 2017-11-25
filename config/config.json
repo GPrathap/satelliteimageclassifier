@@ -11,7 +11,7 @@
   "number_of_classes":1,
   "root_dir":"/data",
   "datapath_train":"/data/train/AOI_5_Khartoum_Train",
-  "datapath_test":"/data/test/AOI_5_Khartoum_Test",
+  "datapath_test":"/data/train/AOI_5_Khartoum_Test",
   "tfrecords_filename_rgb_train":"rgb_segmentation_train.tfrecords",
   "tfrecords_filename_rgb_validate":"rgb_segmentation_validate.tfrecords",
   "tfrecords_filename_rgb_test":"rgb_segmentation_test.tfrecords",

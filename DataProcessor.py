@@ -1,54 +1,47 @@
 from __future__ import print_function
 
 import gdal
-import json
-import os
-import sys
-from logging import getLogger, Formatter, StreamHandler, INFO
-from pathlib import Path
-import subprocess
 import glob
-import warnings
-import scipy
-import re
-import tqdm
-import tables as tb
-import pandas as pd
-import numpy as np
-import skimage.transform
+import json
+import math
+import os
+import pickle
 import rasterio
-import shapely.wkt
-import matplotlib.pyplot as plt
-
-from PIL import Image
-import skimage.io as io
-import tensorflow as tf
-import skimage.transform
-import skimage.morphology
 import rasterio.features
-import shapely.wkt
-import shapely.ops
+import re
+import subprocess
+import sys
+import warnings
+from logging import getLogger, Formatter, StreamHandler, INFO
+
+import fiona
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy
 import shapely.geometry
+import shapely.ops
+import shapely.wkt
+import shapely.wkt
+import skimage.morphology
+import skimage.transform
+import skimage.transform
+import tables as tb
 # from dir_traversal_tfrecord import tfrecord_auto_traversal
 import tensorflow as tf
-import math
-
-from scipy.stats import pearsonr
+import tqdm
+from pathlib import Path
 from sklearn.datasets.base import Bunch
-import fiona
-import pickle
 
-from tf_unetnew.tf_unet import unet
-
-import os
 from DataProviderGSI import GISDataProvider
 from QueueLoader import QueueLoader
+from unet import unet
+
 plt.rcParams['image.cmap'] = 'gist_earth'
 from collections import namedtuple
 
 
 # Logger
-from image_object import image_object
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -471,7 +464,7 @@ class DataProcessor():
 
     def prep_rgb_image_store_train(self, area_id, datapath, is_valtrain=True):
         prefix = self.area_id_to_prefix(area_id)
-        bandstats = self.__load_rgb_bandstats(area_id)
+        bandstats = self.load_rgb_bandstats(area_id)
 
         self.logger.info("prep_rgb_image_store_train for {}".format(prefix))
         if is_valtrain:
@@ -495,7 +488,7 @@ class DataProcessor():
 
     def prep_rgb_image_store_test(self, area_id, writer):
         prefix = self.area_id_to_prefix(area_id)
-        bandstats = self.__load_rgb_bandstats(area_id)
+        bandstats = self.load_rgb_bandstats(area_id)
 
         self.logger.info("prep_rgb_image_store_test for {}".format(prefix))
         fn_list = self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)
@@ -550,8 +543,8 @@ class DataProcessor():
 
     def prep_mul_image_store_train(self, area_id, datapath, is_valtrain=True):
         prefix = self.area_id_to_prefix(area_id)
-        bandstats_rgb = self.__load_rgb_bandstats(area_id)
-        bandstats_mul = self.__load_mul_bandstats(area_id)
+        bandstats_rgb = self.load_rgb_bandstats(area_id)
+        bandstats_mul = self.load_mul_bandstats(area_id)
 
         self.logger.info("prep_mul_image_store_train for ".format(prefix))
         if is_valtrain:
@@ -576,7 +569,7 @@ class DataProcessor():
 
     def prep_mul_image_only_store_train(self, area_id, datapath, is_valtrain=True):
         prefix = self.area_id_to_prefix(area_id)
-        bandstats_mul = self.__load_mul_bandstats(area_id)
+        bandstats_mul = self.load_mul_bandstats(area_id)
 
         self.logger.info("prep_mul_image_only_store_train for ".format(prefix))
         if is_valtrain:
@@ -648,8 +641,8 @@ class DataProcessor():
 
     def prep_mul_image_store_test(self, area_id, writer):
         prefix = self.area_id_to_prefix(area_id)
-        bandstats_rgb = self.__load_rgb_bandstats(area_id)
-        bandstats_mul = self.__load_mul_bandstats(area_id)
+        bandstats_rgb = self.load_rgb_bandstats(area_id)
+        bandstats_mul = self.load_mul_bandstats(area_id)
 
         self.logger.info("prep_mul_image_store_test for ".format(prefix))
         fn_list = self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)
@@ -677,7 +670,7 @@ class DataProcessor():
 
     def prep_mul_image_store_test_v12(self, area_id, writer):
         prefix = self.area_id_to_prefix(area_id)
-        bandstats_mul = self.__load_mul_bandstats(area_id)
+        bandstats_mul = self.load_mul_bandstats(area_id)
 
         self.logger.info("prep_mul_image_store_test for ".format(prefix))
         fn_list = self.FMT_TEST_IMAGELIST_PATH.format(prefix=prefix)
@@ -794,7 +787,7 @@ class DataProcessor():
         # df.loc[:, 'ImageId'] = df.ImageId.str[4:]
         return df
 
-    def __load_rgb_bandstats(self, area_id):
+    def load_rgb_bandstats(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
         fn_stats = self.FMT_RGB_BANDCUT_TH_PATH.format(prefix)
         df_stats = pd.read_csv(fn_stats, index_col='area_id')
@@ -806,7 +799,7 @@ class DataProcessor():
                 max=r['chan{}_max'.format(chan_i)])
         return stats_dict
 
-    def __load_mul_bandstats(self, area_id):
+    def load_mul_bandstats(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
         fn_stats = self.FMT_MUL_BANDCUT_TH_PATH.format(prefix)
         df_stats = pd.read_csv(fn_stats, index_col='area_id')
@@ -1141,10 +1134,10 @@ class DataProcessor():
         fn_osm = self.FMT_TEST_OSM_STORE.format(prefix)
         self.logger.info(">> validate sub-command: {}".format(prefix))
         dict_n_osm_layers = {
-            2: 4,
-            3: 4,
-            4: 4,
-            5: 4,
+            2: 2,
+            3: 2,
+            4: 2,
+            5: 2,
         }
         osm_layers = dict_n_osm_layers[area_id]
         self.logger.info("Validate step for {}".format(prefix))
@@ -1165,6 +1158,7 @@ class DataProcessor():
 
                     im = np.vstack([im, im2])
                     im = im - immean
+                    ## TODO remove transform into swap
                     im = np.transpose(im).astype(np.float64)
 
                     image_id_prefix = prefix + "_img"
@@ -1277,15 +1271,28 @@ class DataProcessor():
                 # fn_tif = test_image_id_to_path(image_id)
                 fn_tif = self.get_test_image_path_from_imageid(
                     image_id, datapath, mul=False)
+                fig, ax1 = plt.subplots(1, 5, sharey=True, figsize=(5, 5))
                 with rasterio.open(fn_tif, 'r') as fr:
                     values = fr.read(1)
+
+                    fig1, ax2 = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+                    plt.imshow(values)
+
                     masks = []  # rasterize masks
+                    cou=0
                     for layer_geoms in layers:
                         mask = rasterio.features.rasterize(
                             layer_geoms,
                             out_shape=values.shape,
                             transform=rasterio.guard_transform(
                                 fr.transform))
+                        imageInfo1 = np.array(mask)
+                        drawrgbonly1 = imageInfo1
+                        ax1[cou].imshow(drawrgbonly1, aspect="auto")
+                        ax1[cou].xaxis.set_visible(False)
+                        ax1[cou].yaxis.set_visible(False)
+                        cou = cou + 1
+
                         masks.append(mask)
                     masks = np.array(masks)
                     masks = np.swapaxes(masks, 0, 2)
@@ -1310,11 +1317,13 @@ class DataProcessor():
                                          im.shape,
                                          filters=filters)
                     ds[:] = im
-                    image_id_prefix = prefix + "_img"
-                    image_id_index = image_id.replace(image_id_prefix, "")
-                    image_id_index = int(image_id_index)
-                    mask = np.zeros([256, 256]).astype(np.uint8)
-                    im = im.astype(np.float64)
+                    # image_id_prefix = prefix + "_img"
+                    # image_id_index = image_id.replace(image_id_prefix, "")
+                    # image_id_index = int(image_id_index)
+                    # mask = np.zeros([256, 256]).astype(np.uint8)
+                    # im = im.astype(np.float64)
+            print("end osm laters for test")
+        print("end osm laters for test")
 
     def _get_valtest_mul_data(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
@@ -1331,7 +1340,9 @@ class DataProcessor():
                     im = np.swapaxes(im, 1, 2)
                     mask = np.array(af.get_node('/' + image_id))
                     mask = (mask > 0.5).astype(np.uint8)
+                    ## TODO remove transform into swap
                     im=np.transpose(im).astype(np.float64)
+
                     image_id_prefix = prefix+"_img"
                     image_id_index = image_id.replace(image_id_prefix, "")
                     image_id_index = int(image_id_index)
@@ -1368,6 +1379,7 @@ class DataProcessor():
 
                     mask = np.array(af.get_node('/' + image_id))
                     mask = (mask > 0.5).astype(np.uint8)
+                    ## TODO remove transform into swap
                     im=np.transpose(im).astype(np.float64)
                     image_id_prefix = prefix + "_img"
                     image_id_index = image_id.replace(image_id_prefix, "")
@@ -2238,29 +2250,21 @@ class DataProcessor():
         if area_id == 2:
             return [
                 self.extract_buildings_geoms(area_id),
-                self.extract_landusages_industrial_geoms(area_id),
-                self.extract_landusages_residential_geoms(area_id),
                 self.extract_roads_geoms(area_id),
             ]
         elif area_id == 3:
             return [
                 self.extract_buildings_geoms(area_id),
-                self.extract_landusages_industrial_geoms(area_id),
-                self.extract_landusages_residential_geoms(area_id),
                 self.extract_roads_geoms(area_id),
             ]
         elif area_id == 4:
             return [
-                self.extract_waterarea_geoms(area_id),
-                self.extract_landusages_industrial_geoms(area_id),
-                self.extract_landusages_residential_geoms(area_id),
+                self.extract_buildings_geoms(area_id),
                 self.extract_roads_geoms(area_id),
             ]
         elif area_id == 5:
             return [
-                self.extract_waterarea_geoms(area_id),
-                self.extract_landusages_industrial_geoms(area_id),
-                self.extract_landusages_residential_geoms(area_id),
+                self.extract_buildings_geoms(area_id),
                 self.extract_roads_geoms(area_id),
             ]
         else:
@@ -2287,9 +2291,12 @@ class DataProcessor():
                 # fn_tif = train_image_id_to_path(image_id)
                 fn_tif = self.get_train_image_path_from_imageid(image_id, datapath, mul=False)
                 with rasterio.open(fn_tif, 'r') as fr:
+                    fig1, ax2 = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+
                     values = fr.read(1)
+                    plt.imshow(values)
                     masks = []  # rasterize masks
-                    fig, ax1 = plt.subplots(1, 6, sharey=True, figsize=(5, 5))
+                    fig, ax1 = plt.subplots(1, 5, sharey=True, figsize=(5, 5))
                     cou=0
                     for layer_geoms in layers:
                         mask = rasterio.features.rasterize(
@@ -2303,6 +2310,8 @@ class DataProcessor():
                         ax1[cou].xaxis.set_visible(False)
                         ax1[cou].yaxis.set_visible(False)
                         cou=cou+1
+
+
                         masks.append(mask)
                     masks = np.array(masks)
                     masks = np.swapaxes(masks, 0, 2)
@@ -2327,6 +2336,8 @@ class DataProcessor():
                                          im.shape,
                                          filters=filters)
                     ds[:] = im
+            print("end  of creating layers")
+        print("end  of creating layers")
 
     def get_mul_mean_image(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
@@ -2481,13 +2492,12 @@ class DataProcessor():
         fn_osm = self.FMT_VALTEST_OSM_STORE.format(prefix)
         self.logger.info(">> validate sub-command: {}".format(prefix))
         dict_n_osm_layers = {
-            2: 4,
-            3: 5,
-            4: 4,
-            5: 4,
+            2: 2,
+            3: 2,
+            4: 2,
+            5: 2,
         }
         osm_layers = dict_n_osm_layers[area_id]
-        n_input_layers = 8 + osm_layers
         self.logger.info("Validate step for {}".format(prefix))
         X_mean = self.get_mul_mean_image(area_id)
         X_osm_mean = np.zeros((osm_layers, self.INPUT_SIZE, self.INPUT_SIZE))
@@ -2508,6 +2518,7 @@ class DataProcessor():
 
                             im = np.vstack([im, im2])
                             im =  im - immean
+                            ## TODO remove transform into swap
                             im = np.transpose(im).astype(np.float64)
                             mask = np.array(f_mask.get_node('/' + slice_id))
                             mask = (mask > 0).astype(np.uint8)
@@ -2530,10 +2541,10 @@ class DataProcessor():
         fn_osm = self.FMT_VALTRAIN_OSM_STORE.format(prefix)
         self.logger.info(">> validate sub-command: {}".format(prefix))
         dict_n_osm_layers = {
-            2: 4,
-            3: 5,
-            4: 4,
-            5: 4,
+            2: 2,
+            3: 2,
+            4: 2,
+            5: 2,
         }
         osm_layers = dict_n_osm_layers[area_id]
         self.logger.info("Validate step for {}".format(prefix))
@@ -2556,6 +2567,7 @@ class DataProcessor():
 
                             im = np.vstack([im, im2])
                             im =  im - immean
+                            ## TODO remove transform into swap
                             im = np.transpose(im).astype(np.float64)
                             mask = np.array(f_mask.get_node('/' + slice_id))
                             mask = (mask > 0).astype(np.uint8)
@@ -2593,6 +2605,7 @@ class DataProcessor():
                         im = np.swapaxes(im, 1, 2)
                         mask = np.array(masks_list.get_node('/' + slice_id))
                         mask = (mask > 0.5).astype(np.uint8)
+                        ## TODO remove transform into swap
                         im = np.transpose(im).astype(np.float64)
                         image_id_prefix = prefix + "_img"
                         image_id_index = image_id.replace(image_id_prefix, "")
@@ -2621,6 +2634,7 @@ class DataProcessor():
                         im = np.swapaxes(im, 1, 2)
                         mask = np.array(masks_list.get_node('/' + slice_id))
                         mask = (mask > 0.5).astype(np.uint8)
+                        ## TODO remove transform into swap
                         im = np.transpose(im).astype(np.float64)
                         image_id_prefix = prefix + "_img"
                         image_id_index = image_id.replace(image_id_prefix, "")
@@ -2790,7 +2804,7 @@ class DataProcessor():
         # batch_size_for_net = int(self.plugin_config[model_name]["train"]["batch_size"])
         additianl_channals = 0
         if self.MODEL_NAME == "v3":
-            additianl_channals = 4
+            additianl_channals = 2
         generator_train = GISDataProvider(self.plugin_config_dir,
                                           additianl_channals=additianl_channals,
                                           type=type_of_data)
@@ -2825,7 +2839,7 @@ class DataProcessor():
         testing_epochs = int(self.plugin_config[model_name]["test"]["epochs"])
         additianl_channals = 0
         if self.MODEL_NAME == "v3":
-            additianl_channals = 4
+            additianl_channals = 2
 
         generator_test = GISDataProvider(self.plugin_config_dir,
                                          additianl_channals=additianl_channals,

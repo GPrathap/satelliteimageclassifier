@@ -1,13 +1,10 @@
-from DataProcessor import DataProcessor
-from tf_unetnew.tf_unet import unet
+import os
 
 import matplotlib.pyplot as plt
-import os
-import tensorflow as tf
-from DataProviderGSI import GISDataProvider
-from QueueLoader import QueueLoader
+
+from DataProcessor import DataProcessor
+
 plt.rcParams['image.cmap'] = 'gist_earth'
-from collections import namedtuple
 
 plugin_config = "./config/config.json"
 type_of_data="multi"

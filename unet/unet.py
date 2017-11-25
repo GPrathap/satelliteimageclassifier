@@ -1,17 +1,15 @@
+import logging
 import os
 import shutil
-import numpy as np
 from collections import OrderedDict
-import logging
-import matplotlib.pyplot as plt
 
+import numpy as np
 import tensorflow as tf
+from layers import (weight_variable, weight_variable_devonc, bias_variable,
+                                 conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
+                                 cross_entropy)
 
-from tf_unetnew.tf_unet import util
-from QueueLoader import QueueLoader
-from tf_unetnew.tf_unet.layers import (weight_variable, weight_variable_devonc, bias_variable,
-                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
-                            cross_entropy)
+import util
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
@@ -544,8 +542,8 @@ class Trainer(object):
                                                        self.net.keep_prob: 1., self.net.phase:0})
         
         logging.info("Verification error= {:.1f}%, loss= {:.4f}".format(error_rate(prediction,
-                                                                          util.crop_to_shape(batch_y,
-                                                                                             prediction.shape)),
+                                                                                   util.crop_to_shape(batch_y,
+                                                                                                      prediction.shape)),
                                                                           loss))
         # img = util.combine_img_prediction(batch_x, batch_y, prediction)
         # util.save_image(img, "%s/%s.jpg"%(self.prediction_path, name))
