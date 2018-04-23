@@ -27,7 +27,7 @@ y_pred_2, test_image_ids_v3 = dataprocessor_v3.test(trainer_v3, operators_v3, di
 
 
 
-dataprocessor_v17 = DataProcessor(plugin_config, base_model_name="v1", model_name="v4", image_dir="v4",
+dataprocessor_v17 = DataProcessor(plugin_config, base_model_name="v1", model_name="vfinal", image_dir="vfinal",
                             is_final=False)
 dataprocessor_v17.execute()
 dataprocessor_v17.testproc(y_pred_0, y_pred_1, y_pred_2)

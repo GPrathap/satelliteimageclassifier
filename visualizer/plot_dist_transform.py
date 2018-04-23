@@ -13,8 +13,8 @@ def plot_dist_transform(input_image, pixel_coords, dist_image,
                         poly_nofill_color='blue', cmap='bwr'):
     '''Explore distance transform'''
 
-    fig, (ax0, ax1, ax2) = plt.subplots(1, 3, 
-                                        figsize=(3*figsize[0], figsize[1]))
+    fig, (ax0, ax1) = plt.subplots(1, 2,
+                                        figsize=(2*figsize[0], figsize[1]))
 
     mind, maxd = np.round(np.min(dist_image),2), np.round(np.max(dist_image),2)
     
@@ -35,36 +35,37 @@ def plot_dist_transform(input_image, pixel_coords, dist_image,
         p1 = PatchCollection(patches, alpha=0.75, match_original=True)
 
     ax0.imshow(input_image)
+    ax0.axis('off')
     if len(patches) > 0:
         ax0.add_collection(p0)
-    ax0.set_title('Input Image')
-    
+    ax0.set_title('Normalized Input Image')
+    ax0.title.set_fontsize(16)
 
     # transform
-    cbar_pointer = ax1.imshow(dist_image)
-    dist_suffix = " (min=" + str(mind) + ", max=" + str(maxd) + ")"
-    ax1.set_title("Yuan 2016 Distance Transform" + dist_suffix)
+    # cbar_pointer = ax1.imshow(dist_image)
+    # dist_suffix = " (min=" + str(mind) + ", max=" + str(maxd) + ")"
+    # ax1.set_title("Binary Distance Transform" + dist_suffix)
     
     # overlay buildings on distance transform
-    ax2.imshow(dist_image)
+    ax1.imshow(dist_image)
     # truth polygons
     if len(patches) > 0:
-        ax2.add_collection(p1)
+        ax1.add_collection(p1)
     # truth mask
     #ax2.imshow(z, cmap=palette, alpha=0.5, 
     #       norm=matplotlib.colors.Normalize(vmin=0.5, vmax=0.9, clip=False))
-    ax2.set_title("Ground Truth Polygons Overlaid on Distance Transform")
-    
-    if colorbar:
-        #from mpl_toolkits.axes_grid1 import make_axes_locatable
-        #divider = make_axes_locatable(ax2)
-        #cax = divider.append_axes('right', size='5%', pad=0.05)
-        #fig.colorbar(cbar_pointer, cax=cax, orientation='vertical')
-        left, bottom, width, height = [0.38, 0.85, 0.24, 0.03]
-        cax = fig.add_axes([left, bottom, width, height])
-        fig.colorbar(cbar_pointer, cax=cax, orientation='horizontal')
+    ax1.set_title("Ground Truth Polygons Overlaid on Binary Distance Transform")
+    ax1.title.set_fontsize(16)
+    # if colorbar:
+    #     #from mpl_toolkits.axes_grid1 import make_axes_locatable
+    #     #divider = make_axes_locatable(ax2)
+    #     #cax = divider.append_axes('right', size='5%', pad=0.05)
+    #     #fig.colorbar(cbar_pointer, cax=cax, orientation='vertical')
+    #     left, bottom, width, height = [0.38, 0.85, 0.24, 0.03]
+    #     cax = fig.add_axes([left, bottom, width, height])
+    #     # fig.colorbar(cbar_pointer, cax=cax, orientation='horizontal')
 
-    #plt.axis('off')
+    plt.axis('off')
     plt.tight_layout()
     if add_title:
         suptitle.set_y(0.95)

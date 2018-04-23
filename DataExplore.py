@@ -136,6 +136,6 @@ class DataExplore():
 
 plugin_config = "./config/config.json"
 data_explore_util = DataExplore(plugin_config)
-data_explore_util.plot_mapping_of_image_given_by_name('./result/3band/3band_AOI_1_RIO_img1008.tif')
+data_explore_util.plot_mapping_of_image_given_by_name('./result/3band/3band_AOI_1_RIO_img2149.tif')
 # data_explore_util.plot_mapping_of_image_given_by_name('/data/train/AOI_5_Khartoum_Train/RGB-PanSharpen/RGB-PanSharpen_AOI_5_Khartoum_img1.tif')
 # data_explore_util.execute()

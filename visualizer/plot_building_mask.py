@@ -41,8 +41,9 @@ def plot_building_mask(input_image, pixel_coords, mask_image,
     ax0.imshow(input_image)
     if len(patches) > 0:
         ax0.add_collection(p0)
-    ax0.set_title('Input Image')
-    
+    ax0.set_title('Normalized Input Image')
+    ax0.axis('off')
+    ax0.title.set_fontsize(20)
     # truth polygons
     zero_arr = np.zeros(input_image.shape[:2])
     # set background to white?
@@ -51,7 +52,8 @@ def plot_building_mask(input_image, pixel_coords, mask_image,
     if len(patches) > 0:
         ax1.add_collection(p1)
     ax1.set_title('Ground Truth Building')
-        
+    ax1.axis('off')
+    ax1.title.set_fontsize(20)
     # old method of truth, with mask
     ## ax0: raw imageø
     #ax0.imshow(input_image)
@@ -71,7 +73,8 @@ def plot_building_mask(input_image, pixel_coords, mask_image,
     #if len(patches) > 0:
     #    ax1.add_collection(p1)
     ax2.set_title('Building with Mask')
-          
+    ax2.axis('off')
+    ax2.title.set_fontsize(20)
     #plt.axis('off')
     plt.tight_layout()
     if add_title:

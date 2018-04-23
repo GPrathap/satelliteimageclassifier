@@ -1,51 +1,25 @@
-from DataProcessor import DataProcessor
-
-
-import gdal
-import glob
-import json
 import math
-import os
-import pickle
-import rasterio
-import rasterio.features
-import re
-import subprocess
-import sys
-import warnings
-from logging import getLogger, Formatter, StreamHandler, INFO
 
-import fiona
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scipy
-import shapely.geometry
-import shapely.ops
-import shapely.wkt
-import shapely.wkt
+import rasterio
+import rasterio.features
 import skimage.morphology
 import skimage.transform
 import skimage.transform
 import tables as tb
 # from dir_traversal_tfrecord import tfrecord_auto_traversal
-import tensorflow as tf
 import tqdm
-from pathlib import Path
-from sklearn.datasets.base import Bunch
 
-from DataProviderGSI import GISDataProvider
-from QueueLoader import QueueLoader
-from unet import unet
-
-
+from DataProcessor import DataProcessor
 
 plugin_config = "./config/config.json"
 type_of_data="multi"
 
 analysis_image_list = "./config/imageInfo.csv"
 
-def prep_osmlayer_train(dataprocessor, image_id):
+def prep_osmlayer_train(dataprocessor, image_id, input_image):
     area_id = dataprocessor.directory_name_to_area_id(dataprocessor.DATA_PATH)
     prefix = dataprocessor.area_id_to_prefix(area_id)
     dataprocessor.logger.info("prep_osmlayer for {}".format(prefix))
@@ -58,27 +32,30 @@ def prep_osmlayer_train(dataprocessor, image_id):
     fn_tif = dataprocessor.get_train_image_path_from_imageid(image_id, dataprocessor.DATA_PATH, mul=False)
     with rasterio.open(fn_tif, 'r') as fr:
         values = fr.read(1).astype(np.float32)
-        fig, ax1 = plt.subplots(1, 2, sharey=True, figsize=(5, 5))
-        cou = 0
+        # fig, ax1 = plt.subplots(1, 2, sharey=True, figsize=(5, 5))
+
+        fig1, ax1 = plt.subplots(1, 3, sharey=True, figsize=(6, 6))
+        ax1[0].imshow(input_image)
+        ax1[0].xaxis.set_visible(False)
+        ax1[0].yaxis.set_visible(False)
+
+        cou = 1
         for layer_geoms in layers:
             mask = rasterio.features.rasterize(
                 layer_geoms,
                 out_shape=values.shape,
                 transform=rasterio.guard_transform(
                     fr.transform))
-            imageInfo1 = np.array(mask)
+            mask_a = skimage.transform.resize(mask, (256, 256))
+            imageInfo1 = np.array(mask_a)
             drawrgbonly1 = imageInfo1
-            ax1[cou].imshow(drawrgbonly1, aspect="auto")
+            ax1[cou].imshow(drawrgbonly1)
             ax1[cou].xaxis.set_visible(False)
             ax1[cou].yaxis.set_visible(False)
             cou = cou + 1
 
 
-print("end  of creating layers")
-print("end  of creating layers")
-
-
-def get_resized_8chan_image_train(dataprocessor, image_id):
+def get_resized_8chan_image_train(dataprocessor, image_id, input_image):
     im = []
     area_id = dataprocessor.directory_name_to_area_id(dataprocessor.DATA_PATH)
     bs_rgb = dataprocessor.load_rgb_bandstats(area_id)
@@ -89,23 +66,29 @@ def get_resized_8chan_image_train(dataprocessor, image_id):
         original = values
         original = np.swapaxes(original, 0, 2)
         original = np.swapaxes(original, 0, 1)
-        fig1, ax1 = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+        fig1, ax1 = plt.subplots(1, 2, sharey=True, figsize=(5, 5))
         imageInfo = np.array(original)
         drawrgbonly = imageInfo
-        ax1.imshow(drawrgbonly, aspect="auto")
+        ax1[0].imshow(drawrgbonly, aspect="auto")
+        ax1[0].xaxis.set_visible(False)
+        ax1[0].yaxis.set_visible(False)
+        ax1[1].imshow(input_image, aspect="auto")
+        ax1[1].xaxis.set_visible(False)
+        ax1[1].yaxis.set_visible(False)
+
 
         for chan_i in range(3):
             min_val = bs_rgb[chan_i]['min']
             max_val = bs_rgb[chan_i]['max']
             values[chan_i] = np.clip(values[chan_i], min_val, max_val)
             values[chan_i] = (values[chan_i] - min_val) / (max_val - min_val)
-            if(chan_i==2):
-                values = np.swapaxes(values, 0, 2)
-                values = np.swapaxes(values, 0, 1)
-                fig, ax = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
-                imageInfo = np.array(values)
-                drawrgbonly = imageInfo
-                ax.imshow(drawrgbonly, aspect="auto")
+            # if(chan_i==2):
+            #     values = np.swapaxes(values, 0, 2)
+            #     values = np.swapaxes(values, 0, 1)
+            #     fig, ax = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+            #     imageInfo = np.array(values)
+            #     drawrgbonly = imageInfo
+            #     ax.imshow(drawrgbonly, aspect="auto")
                 
 def get_slice_8chan_im(dataprocessor, image_id):
     area_id = dataprocessor.directory_name_to_area_id(dataprocessor.DATA_PATH)
@@ -122,7 +105,7 @@ def get_slice_8chan_im(dataprocessor, image_id):
     values = np.swapaxes(values, 0, 1)
     assert values.shape == (650, 650, 8)
 
-    fig, ax = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+    fig, ax = plt.subplots(1, 1, sharey=True, figsize=(6, 6))
     imageInfo = np.array(values)
     drawrgbonly= imageInfo[:,:,[4,2,1]]
     ax.imshow(drawrgbonly, aspect="auto")
@@ -160,22 +143,25 @@ def _get_valtrain_mul_data(dataprocessor):
         with tb.open_file(fn_mask, 'r') as af:
             for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
                 im = np.array(f.get_node('/' + image_id))
-                fig, ax = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+                fig, ax = plt.subplots(1, 2, sharey=True, figsize=(6, 6))
                 rgb_image = im[:, :, 0:3]
                 imageInfo = np.array(rgb_image)
                 drawrgbonly= imageInfo[:,:,0:3]
-                ax.imshow(drawrgbonly, aspect="auto")
-
+                ax[0].imshow(drawrgbonly, aspect="auto")
+                ax[0].xaxis.set_visible(False)
+                ax[0].yaxis.set_visible(False)
                 mask = np.array(af.get_node('/' + image_id))
                 mask = (mask > 0.5).astype(np.uint8)
 
-                fig3, ax4 = plt.subplots(1, 1, sharey=True, figsize=(3, 3))
-                ax4.imshow(mask, aspect="auto")
+                # fig3, ax4 = plt.subplots(1, 1, sharey=True, figsize=(5, 5))
+                ax[1].imshow(mask, aspect="auto")
+                ax[1].xaxis.set_visible(False)
+                ax[1].yaxis.set_visible(False)
 
 
-                get_resized_8chan_image_train(dataprocessor, image_id)
+                get_resized_8chan_image_train(dataprocessor, image_id, drawrgbonly)
                 get_slice_8chan_im(dataprocessor, image_id)
-                prep_osmlayer_train(dataprocessor, image_id)
+                prep_osmlayer_train(dataprocessor, image_id, drawrgbonly)
 
 
 

@@ -1530,8 +1530,8 @@ class DataProcessor():
 
         self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
 
-    def _internal_validate_fscore(self, area_id, trainer, path, operators, epoch=3, predict=True, min_th=30,
-                                  enable_tqdm=False):
+    def _internal_validate_fscore(self, area_id, trainer, path, operators, epoch=3,
+                                  predict=True, min_th=30, enable_tqdm=False):
         prefix = self.area_id_to_prefix(area_id)
         # Prediction phase
         self.logger.info("Prediction phase")
@@ -2692,6 +2692,7 @@ class DataProcessor():
                 x0 = self.STRIDE_SZ * pos_i
                 y0 = self.STRIDE_SZ * pos_j
                 for slice_pred in slice_pred_list:
+                    #TODO FIX THIS RESISING PROBLEM
                     mask_a = skimage.transform.resize(slice_pred[slice_idx][0], (256, 256))
                     pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (mask_a)
                     pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1

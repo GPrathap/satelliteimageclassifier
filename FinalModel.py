@@ -27,7 +27,7 @@ net_v16, trainer_v16, operators_v16 = dataprocessor_v16.get_model(type_of_data)
 y_pred_2, images_idsv16 = dataprocessor_v16._internal_validate_predict_best_param("v3", trainer_v16, operators_v16,
                                               enable_tqdm=False)
 
-dataprocessor_v17 = DataProcessor(plugin_config, base_model_name="v1", model_name="v4", image_dir="v4",
+dataprocessor_v17 = DataProcessor(plugin_config, base_model_name="v1", model_name="vfinal", image_dir="vfinal",
                             is_final=False)
 dataprocessor_v17.execute()
 dataprocessor_v17.evalfscore_v17(y_pred_0, y_pred_1, y_pred_2)
