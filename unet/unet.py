@@ -5,11 +5,11 @@ from collections import OrderedDict
 
 import numpy as np
 import tensorflow as tf
-from layers import (weight_variable, weight_variable_devonc, bias_variable,
+from unet.layers import (weight_variable, weight_variable_devonc, bias_variable,
                                  conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
                                  cross_entropy)
 
-import util
+import unet.util as util
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
