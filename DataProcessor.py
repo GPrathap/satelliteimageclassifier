@@ -283,12 +283,13 @@ class DataProcessor():
                     )  # Remove sensored mask
                     band_values[i_chan].append(values_)
 
-        self.logger.info("Calc 2 sigma percentile points ...")
+        self.logger.info("Calc 2 sigma percentile ...")
         for i_chan in range(3):
             band_values[i_chan] = np.concatenate(
                 band_values[i_chan]).ravel()
             mean_value = np.mean(band_values[i_chan])
             std_value = np.std(band_values[i_chan])
+
             # Assuming all data points are belongs to one Gaussian distribution
             min_margin = int(mean_value - std_value * 2)
             max_margin = int(mean_value + std_value * 2)
@@ -352,14 +353,26 @@ class DataProcessor():
                     )  # Remove sensored mask
                     band_values[i_chan].append(values_)
 
-        self.logger.info("Calc percentile point ...")
+        self.logger.info("Calc 2 sigma percentile values ...")
         for i_chan in range(8):
             band_values[i_chan] = np.concatenate(
                 band_values[i_chan]).ravel()
-            band_cut_th[i_chan]['max'] = scipy.percentile(
-                band_values[i_chan], 98)
-            band_cut_th[i_chan]['min'] = scipy.percentile(
-                band_values[i_chan], 2)
+            mean_value = np.mean(band_values[i_chan])
+            std_value = np.std(band_values[i_chan])
+
+            # Assuming all data points are belongs to one Gaussian distribution
+            min_margin = int(mean_value - std_value * 2)
+            max_margin = int(mean_value + std_value * 2)
+
+            # If not just calculate percentile values 98 and 2 based on if the margin
+            # is go out the range
+            if max_margin > 255:
+                max_margin = scipy.percentile(band_values[i_chan], 98)
+            if min_margin < 0:
+                min_margin = scipy.percentile(band_values[i_chan], 2)
+
+            band_cut_th[i_chan]['max'] = max_margin
+            band_cut_th[i_chan]['min'] = min_margin
         return band_cut_th
 
     def image_mask_resized_from_summary(self, df, image_id):
