@@ -13,8 +13,8 @@ def plot_building_mask(input_image, pixel_coords, mask_image,
                   poly_edge_color='red', poly_nofill_color='blue', cmap='bwr'):
 
 
-    fig, (ax0, ax1, ax2) = plt.subplots(1, 3, 
-                                        figsize=(3*figsize[0], figsize[1]))
+    fig, (ax0, ax2) = plt.subplots(1, 2,
+                                        figsize=(2*figsize[0], figsize[1]))
     
     if add_title:
         suptitle = fig.suptitle(plot_name.split('/')[-1], fontsize='large')
@@ -39,21 +39,21 @@ def plot_building_mask(input_image, pixel_coords, mask_image,
  
     # ax0: raw image
     ax0.imshow(input_image)
-    if len(patches) > 0:
-        ax0.add_collection(p0)
-    ax0.set_title('Normalized Input Image')
+    # if len(patches) > 0:
+    #     ax0.add_collection(p0)
+    # ax0.set_title('Normalized Input Image')
     ax0.axis('off')
     ax0.title.set_fontsize(20)
     # truth polygons
-    zero_arr = np.zeros(input_image.shape[:2])
+    #zero_arr = np.zeros(input_image.shape[:2])
     # set background to white?
     #zero_arr[zero_arr == 0.0] = np.nan
-    ax1.imshow(zero_arr, cmap=cmap)
-    if len(patches) > 0:
-        ax1.add_collection(p1)
-    ax1.set_title('Ground Truth Building')
-    ax1.axis('off')
-    ax1.title.set_fontsize(20)
+    # ax1.imshow(zero_arr, cmap=cmap)
+    # if len(patches) > 0:
+    #     ax1.add_collection(p1)
+    # ax1.set_title('Ground Truth Building')
+    # ax1.axis('off')
+    # ax1.title.set_fontsize(20)
     # old method of truth, with mask
     ## ax0: raw imageø
     #ax0.imshow(input_image)
@@ -72,7 +72,7 @@ def plot_building_mask(input_image, pixel_coords, mask_image,
     # truth polygons?
     #if len(patches) > 0:
     #    ax1.add_collection(p1)
-    ax2.set_title('Building with Mask')
+    # ax2.set_title('Building with Mask')
     ax2.axis('off')
     ax2.title.set_fontsize(20)
     #plt.axis('off')

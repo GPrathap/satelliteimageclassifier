@@ -1,5 +1,5 @@
 import math
-
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,8 +9,12 @@ import skimage.morphology
 import skimage.transform
 import skimage.transform
 import tables as tb
+import cv2
 # from dir_traversal_tfrecord import tfrecord_auto_traversal
 import tqdm
+from spaceNetUtilities import geojson_to_pixel_arr, create_dist_map, create_building_mask
+from visualizer import plot_truth_coords, plot_building_mask, plot_dist_transform, plot_all_transforms
+
 
 from DataProcessor import DataProcessor
 
@@ -142,9 +146,106 @@ def _get_valtrain_mul_data(dataprocessor):
     with tb.open_file(fn_im, 'r') as f:
         with tb.open_file(fn_mask, 'r') as af:
             for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
+                pixel_coords_list = []
+                ground_truth_patches = []
+                spacenet_explore_dir = "/home/geesara/project/satelliteimageclassifier/result"
+                coords_demo_dir = os.path.join(spacenet_explore_dir, 'pixel_coords_demo')
+
+                maskDir = os.path.join(spacenet_explore_dir, 'building_mask')
+                maskDir_vis = os.path.join(spacenet_explore_dir, 'building_mask_vis')
+                mask_demo_dir = os.path.join(spacenet_explore_dir, 'mask_demo')
+
+                distDir = os.path.join(spacenet_explore_dir, 'distance_trans')
+                dist_demo_dir = os.path.join(spacenet_explore_dir, 'distance_trans_demo')
+
+                all_demo_dir = os.path.join(spacenet_explore_dir, 'all_demo')
+                pos_val, pos_val_vis = 1, 255
                 im = np.array(f.get_node('/' + image_id))
                 fig, ax = plt.subplots(1, 2, sharey=True, figsize=(6, 6))
                 rgb_image = im[:, :, 0:3]
+                input_image = rgb_image  # cv2.imread(rasterSrc, 1)
+                name_root = image_id
+                name_root0 = image_id
+                rasterSrc =  os.path.join("/data/train/AOI_3_Paris_Train/RGB-PanSharpen/", 'RGB-PanSharpen_' + name_root + '.tif')
+                # get name root
+
+                # remove 3band or 8band prefix
+
+                vectorSrc = os.path.join("/data/train/AOI_3_Paris_Train/geojson/buildings/", 'buildings_' + name_root + '.geojson')
+                maskSrc = os.path.join(maskDir, name_root0 + '.tif')
+
+                ####################################################
+                # pixel coords and ground truth patches
+                pixel_coords, latlon_coords = \
+                    geojson_to_pixel_arr.geojson_to_pixel_arr(rasterSrc, vectorSrc,
+                                                              pixel_ints=True,
+                                                              verbose=False)
+                pixel_coords_list.append(pixel_coords)
+
+                plot_name = os.path.join(coords_demo_dir, name_root + '.png')
+                patch_collection, patch_coll_nofill = \
+                    plot_truth_coords.plot_truth_coords(input_image, pixel_coords,
+                                                        figsize=(8, 8), plot_name=plot_name,
+                                                        add_title=False)
+                ground_truth_patches.append(patch_collection)
+                plt.close('all')
+                ####################################################
+
+                ####################################################
+                outfile = os.path.join(maskDir, name_root0 + '.tif')
+                outfile_vis = os.path.join(maskDir_vis, name_root0 + '.tif')
+
+                # create mask from 0-1 and mask from 0-255 (for visual inspection)
+                create_building_mask.create_building_mask(rasterSrc, vectorSrc,
+                                                          npDistFileName=outfile,
+                                                          burn_values=pos_val)
+                create_building_mask.create_building_mask(rasterSrc, vectorSrc,
+                                                          npDistFileName=outfile_vis,
+                                                          burn_values=pos_val_vis)
+
+                plot_name = os.path.join(mask_demo_dir, name_root + '.png')
+                mask_image = cv2.imread(outfile, 0)
+                plot_building_mask.plot_building_mask(input_image, pixel_coords,
+                                                      mask_image,
+                                                      figsize=(8, 8), plot_name=plot_name,
+                                                      add_title=False)
+                plt.close('all')
+                ####################################################
+
+                ####################################################
+                # signed distance transform
+                # remove 3band or 8band prefix
+                outfile = os.path.join(distDir, name_root0 + '.npy')  # '.tif'
+                create_dist_map.create_dist_map(rasterSrc, vectorSrc,
+                                                npDistFileName=outfile,
+                                                noDataValue=0, burn_values=pos_val,
+                                                dist_mult=1, vmax_dist=64)
+                # plot
+                # plot_name = os.path.join(dist_demo_dir + name_root, '_no_colorbar.png')
+                plot_name = os.path.join(dist_demo_dir, name_root + '.png')
+                #mask_image = plt.imread(maskSrc)  # cv2.imread(maskSrc, 0)
+                dist_image = np.load(outfile)
+                plot_dist_transform.plot_dist_transform(input_image, pixel_coords,
+                                                        dist_image, figsize=(8, 8),
+                                                        plot_name=plot_name,
+                                                        add_title=False,
+                                                        colorbar=True)  # False)
+                plt.close('all')
+                ####################################################
+
+                ####################################################
+                # plot all transforms
+                plot_name = os.path.join(all_demo_dir, name_root + '.png')  # + '_titles.png'
+                mask_image = plt.imread(maskSrc)  # cv2.imread(maskSrc, 0)
+                dist_image = np.load(outfile)
+                plot_all_transforms.plot_all_transforms(input_image, pixel_coords, mask_image, dist_image,
+                                                        figsize=(8, 8), plot_name=plot_name, add_global_title=False,
+                                                        colorbar=False,
+                                                        add_titles=False,  # True,
+                                                        poly_face_color='orange', poly_edge_color='red',
+                                                        poly_nofill_color='blue', cmap='bwr')
+                plt.close('all')
+                ####################################################
                 imageInfo = np.array(rgb_image)
                 drawrgbonly= imageInfo[:,:,0:3]
                 ax[0].imshow(drawrgbonly, aspect="auto")

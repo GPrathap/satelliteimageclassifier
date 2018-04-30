@@ -36,9 +36,9 @@ def plot_dist_transform(input_image, pixel_coords, dist_image,
 
     ax0.imshow(input_image)
     ax0.axis('off')
-    if len(patches) > 0:
-        ax0.add_collection(p0)
-    ax0.set_title('Normalized Input Image')
+    # if len(patches) > 0:
+    #     ax0.add_collection(p0)
+    # ax0.set_title('Normalized Input Image')
     ax0.title.set_fontsize(16)
 
     # transform
@@ -49,12 +49,12 @@ def plot_dist_transform(input_image, pixel_coords, dist_image,
     # overlay buildings on distance transform
     ax1.imshow(dist_image)
     # truth polygons
-    if len(patches) > 0:
-        ax1.add_collection(p1)
+    # if len(patches) > 0:
+    #     ax1.add_collection(p1)
     # truth mask
     #ax2.imshow(z, cmap=palette, alpha=0.5, 
     #       norm=matplotlib.colors.Normalize(vmin=0.5, vmax=0.9, clip=False))
-    ax1.set_title("Ground Truth Polygons Overlaid on Binary Distance Transform")
+    # ax1.set_title("Ground Truth Polygons Overlaid on Binary Distance Transform")
     ax1.title.set_fontsize(16)
     # if colorbar:
     #     #from mpl_toolkits.axes_grid1 import make_axes_locatable
