@@ -265,9 +265,6 @@ def _get_valtrain_mul_data(dataprocessor):
                 prep_osmlayer_train(dataprocessor, image_id, drawrgbonly)
 
 
-
-
-
 dataprocessor = DataProcessor(plugin_config, base_model_name="v1", model_name="v1", image_dir="v1")
 dataprocessor.execute()
 _get_valtrain_mul_data(dataprocessor)

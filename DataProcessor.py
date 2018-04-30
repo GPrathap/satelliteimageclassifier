@@ -40,11 +40,9 @@ from unet import unet
 plt.rcParams['image.cmap'] = 'gist_earth'
 from collections import namedtuple
 
-
 # Logger
 
 warnings.simplefilter("ignore", UserWarning)
-
 
 
 class DataProcessor():
@@ -58,7 +56,7 @@ class DataProcessor():
             self.ORIGINAL_SIZE = 650
             self.STRIDE_SZ = 197
             self.ROOT_DIR = str(self.plugin_config["root_dir"])
-            self.INPUT_SIZE =  int(self.plugin_config["width_of_image"])
+            self.INPUT_SIZE = int(self.plugin_config["width_of_image"])
             self.input_image_width = int(self.plugin_config["width_of_image"])
             self.input_image_height = int(self.plugin_config["height_of_image"])
             self.DATA_PATH = str(self.plugin_config["datapath_train"])
@@ -129,7 +127,6 @@ class DataProcessor():
                 self.FMT_VALTEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_valtest_ImageId.csv"
                 self.FMT_TEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
 
-
             if (is_final):
                 self.FMT_TRAIN_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_train_ImageId.csv"
                 # self.FMT_TEST_IMAGELIST_PATH = self.BASE_IMAGE_DIR + "/{prefix:s}_test_ImageId.csv"
@@ -159,7 +156,6 @@ class DataProcessor():
             self.logger.setLevel(INFO)
             np.random.seed(1145141919)
 
-
             # Parameters
             self.MIN_POLYGON_AREA = 30
 
@@ -187,12 +183,18 @@ class DataProcessor():
 
             self.FMT_BANDCUT_TH_PATH = self.IMAGE_DIR + "/bandcut{}.csv"
 
-            self.tfrecords_filename_rgb_train = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_rgb_train"])
-            self.tfrecords_filename_rgb_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_rgb_validate"])
-            self.tfrecords_filename_rgb_final_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_rgb_test"])
-            self.tfrecords_filename_multi_train = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_multi_train"])
-            self.tfrecords_filename_multi_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_multi_validate"])
-            self.tfrecords_filename_multi_final_test = self.IMAGE_DIR +"/"+ str(self.plugin_config["tfrecords_filename_multi_test"])
+            self.tfrecords_filename_rgb_train = self.IMAGE_DIR + "/" + str(
+                self.plugin_config["tfrecords_filename_rgb_train"])
+            self.tfrecords_filename_rgb_test = self.IMAGE_DIR + "/" + str(
+                self.plugin_config["tfrecords_filename_rgb_validate"])
+            self.tfrecords_filename_rgb_final_test = self.IMAGE_DIR + "/" + str(
+                self.plugin_config["tfrecords_filename_rgb_test"])
+            self.tfrecords_filename_multi_train = self.IMAGE_DIR + "/" + str(
+                self.plugin_config["tfrecords_filename_multi_train"])
+            self.tfrecords_filename_multi_test = self.IMAGE_DIR + "/" + str(
+                self.plugin_config["tfrecords_filename_multi_validate"])
+            self.tfrecords_filename_multi_final_test = self.IMAGE_DIR + "/" + str(
+                self.plugin_config["tfrecords_filename_multi_test"])
 
     def createRFRecoad(self, img, annotation, image_id, writer):
         height = self.input_image_height
@@ -217,7 +219,6 @@ class DataProcessor():
             'mask_raw': self._bytes_feature(annotation_raw)}))
         serialized = example.SerializeToString()
         writer.write(serialized)
-
 
     def directory_name_to_area_id(self, datapath):
         dir_name = Path(datapath).name
@@ -266,7 +267,7 @@ class DataProcessor():
                     values_ = values[i_chan].ravel().tolist()
                     values_ = np.array(
                         [v for v in values_ if v != 0]
-                    )  # Remove sensored mask
+                    )
                     band_values[i_chan].append(values_)
 
         image_id_list = pd.read_csv(self.FMT_VALTEST_IMAGELIST_PATH.format(
@@ -282,14 +283,27 @@ class DataProcessor():
                     )  # Remove sensored mask
                     band_values[i_chan].append(values_)
 
-        self.logger.info("Calc percentile point ...")
+        self.logger.info("Calc 2 sigma percentile ...")
         for i_chan in range(3):
             band_values[i_chan] = np.concatenate(
                 band_values[i_chan]).ravel()
-            band_cut_th[i_chan]['max'] = scipy.percentile(
-                band_values[i_chan], 98)
-            band_cut_th[i_chan]['min'] = scipy.percentile(
-                band_values[i_chan], 2)
+            mean_value = np.mean(band_values[i_chan])
+            std_value = np.std(band_values[i_chan])
+
+            # Assuming all data points are belongs to one Gaussian distribution
+            min_margin = int(mean_value - std_value * 2)
+            max_margin = int(mean_value + std_value * 2)
+
+            # If not just calculate percentile values 98 and 2 based on if the margin
+            # is go out the range
+            if max_margin > 255:
+                max_margin = scipy.percentile(band_values[i_chan], 98)
+            if min_margin < 0:
+                min_margin = scipy.percentile(band_values[i_chan], 2)
+
+            band_cut_th[i_chan]['max'] = max_margin
+            band_cut_th[i_chan]['min'] = min_margin
+
         return band_cut_th
 
     def calc_mul_multiband_cut_threshold(self, area_id, datapath):
@@ -339,14 +353,26 @@ class DataProcessor():
                     )  # Remove sensored mask
                     band_values[i_chan].append(values_)
 
-        self.logger.info("Calc percentile point ...")
+        self.logger.info("Calc 2 sigma percentile values ...")
         for i_chan in range(8):
             band_values[i_chan] = np.concatenate(
                 band_values[i_chan]).ravel()
-            band_cut_th[i_chan]['max'] = scipy.percentile(
-                band_values[i_chan], 98)
-            band_cut_th[i_chan]['min'] = scipy.percentile(
-                band_values[i_chan], 2)
+            mean_value = np.mean(band_values[i_chan])
+            std_value = np.std(band_values[i_chan])
+
+            # Assuming all data points are belongs to one Gaussian distribution
+            min_margin = int(mean_value - std_value * 2)
+            max_margin = int(mean_value + std_value * 2)
+
+            # If not just calculate percentile values 98 and 2 based on if the margin
+            # is go out the range
+            if max_margin > 255:
+                max_margin = scipy.percentile(band_values[i_chan], 98)
+            if min_margin < 0:
+                min_margin = scipy.percentile(band_values[i_chan], 2)
+
+            band_cut_th[i_chan]['max'] = max_margin
+            band_cut_th[i_chan]['min'] = min_margin
         return band_cut_th
 
     def image_mask_resized_from_summary(self, df, image_id):
@@ -507,8 +533,8 @@ class DataProcessor():
                 image_id_prefix = prefix + "_img"
                 image_id_index = image_id.replace(image_id_prefix, "")
                 image_id_index = int(image_id_index)
-                mask=np.array([1,1]).astype(np.uint8)
-                self.createRFRecoad( im, mask, image_id_index, writer)
+                mask = np.array([1, 1]).astype(np.uint8)
+                self.createRFRecoad(im, mask, image_id_index, writer)
 
     def get_resized_3chan_image_train(self, image_id, datapath, bandstats):
         fn = self.get_train_image_path_from_imageid(image_id, datapath)
@@ -539,7 +565,6 @@ class DataProcessor():
         values = np.swapaxes(values, 0, 1)
         values = skimage.transform.resize(values, (self.INPUT_SIZE, self.INPUT_SIZE))
         return values
-
 
     def prep_mul_image_store_train(self, area_id, datapath, is_valtrain=True):
         prefix = self.area_id_to_prefix(area_id)
@@ -585,8 +610,8 @@ class DataProcessor():
         with tb.open_file(fn_store, 'w') as f:
             for image_id in tqdm.tqdm(df_list.index, total=len(df_list)):
                 for slice_pos, im in self.get_slice_8chan_im(image_id,
-                                                        datapath,
-                                                        bandstats_mul):
+                                                             datapath,
+                                                             bandstats_mul):
                     slice_id = '{}_{}'.format(image_id, slice_pos)
                     atom = tb.Atom.from_dtype(im.dtype)
                     filters = tb.Filters(complib='blosc', complevel=9)
@@ -620,12 +645,12 @@ class DataProcessor():
         # ax.yaxis.set_visible(False)
         #
         # fig, ax1 = plt.subplots(3, 3, sharey=True, figsize=(6, 6))
-        indexx=-1
+        indexx = -1
         for slice_pos in range(9):
             pos_j = int(math.floor(slice_pos / 3.0))
             pos_i = int(slice_pos % 3)
-            if(pos_i==0):
-                indexx=indexx+1
+            if (pos_i == 0):
+                indexx = indexx + 1
             x0 = self.STRIDE_SZ * pos_i
             y0 = self.STRIDE_SZ * pos_j
             im = values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE]
@@ -682,9 +707,9 @@ class DataProcessor():
         with tb.open_file(fn_store, 'w') as f:
             for image_id in tqdm.tqdm(df_list.index, total=len(df_list)):
                 for slice_pos, im in self.get_slice_8chan_im(image_id,
-                                                        self.DATA_PATH_TEST,
-                                                        bandstats_mul,
-                                                        is_test=True):
+                                                             self.DATA_PATH_TEST,
+                                                             bandstats_mul,
+                                                             is_test=True):
                     slice_id = '{}_{}'.format(image_id, slice_pos)
                     atom = tb.Atom.from_dtype(im.dtype)
                     filters = tb.Filters(complib='blosc', complevel=9)
@@ -698,7 +723,6 @@ class DataProcessor():
                     mask = np.zeros([256, 256]).astype(np.uint8)
                     self.createRFRecoad(im, mask, image_id_index, writer)
             writer.close()
-
 
     def get_resized_8chan_image_train(self, image_id, datapath, bs_rgb, bs_mul):
         im = []
@@ -720,8 +744,6 @@ class DataProcessor():
                 im.append(skimage.transform.resize(
                     values[chan_i],
                     (self.INPUT_SIZE, self.INPUT_SIZE)))
-
-
 
         fn = self.get_train_image_path_from_imageid(image_id, datapath, mul=True)
         with rasterio.open(fn, 'r') as f:
@@ -935,9 +957,9 @@ class DataProcessor():
             line_prefix = line.split('), (')[0]
             line_terminate = line.split('))",')[-1]
             line = (
-                line_prefix +
-                '))",' +
-                line_terminate
+                    line_prefix +
+                    '))",' +
+                    line_terminate
             )
         return line
 
@@ -1232,12 +1254,10 @@ class DataProcessor():
                         -1,
                         "POLYGON EMPTY"))
 
-
-
     def get_model_parameter(self, area_id):
         prefix = self.area_id_to_prefix(area_id)
         fn_hist = self.FMT_VALMODEL_EVALTHHIST.format(prefix)
-        best_row = pd.read_csv(fn_hist).sort_values( by='fscore', ascending=False).iloc[0]
+        best_row = pd.read_csv(fn_hist).sort_values(by='fscore', ascending=False).iloc[0]
         param = dict(min_poly_area=int(best_row['min_area_th']))
         return param
 
@@ -1252,7 +1272,7 @@ class DataProcessor():
                                                                     slice_pred_list=[y_pred_1, y_pred_2])
         # pred to polygon
         param = self.get_model_parameter(area_id)
-        self._internal_pred_to_poly_file_test(area_id, y_pred, min_th=param['min_poly_area'],)
+        self._internal_pred_to_poly_file_test(area_id, y_pred, min_th=param['min_poly_area'], )
         self.logger.info(">>>> Test proc for {} ... done".format(prefix))
 
     def prep_osmlayer_test(self, area_id, datapath):
@@ -1279,7 +1299,7 @@ class DataProcessor():
                     plt.imshow(values)
 
                     masks = []  # rasterize masks
-                    cou=0
+                    cou = 0
                     for layer_geoms in layers:
                         mask = rasterio.features.rasterize(
                             layer_geoms,
@@ -1301,7 +1321,6 @@ class DataProcessor():
 
                 # slice of masks
                 for slice_pos in range(9):
-
                     pos_j = int(math.floor(slice_pos / 3.0))
                     pos_i = int(slice_pos % 3)
                     x0 = self.STRIDE_SZ * pos_i
@@ -1341,9 +1360,9 @@ class DataProcessor():
                     mask = np.array(af.get_node('/' + image_id))
                     mask = (mask > 0.5).astype(np.uint8)
                     ## TODO remove transform into swap
-                    im=np.transpose(im).astype(np.float64)
+                    im = np.transpose(im).astype(np.float64)
 
-                    image_id_prefix = prefix+"_img"
+                    image_id_prefix = prefix + "_img"
                     image_id_index = image_id.replace(image_id_prefix, "")
                     image_id_index = int(image_id_index)
                     self.createRFRecoad(im, mask, image_id_index, writer)
@@ -1380,7 +1399,7 @@ class DataProcessor():
                     mask = np.array(af.get_node('/' + image_id))
                     mask = (mask > 0.5).astype(np.uint8)
                     ## TODO remove transform into swap
-                    im=np.transpose(im).astype(np.float64)
+                    im = np.transpose(im).astype(np.float64)
                     image_id_prefix = prefix + "_img"
                     image_id_index = image_id.replace(image_id_prefix, "")
                     image_id_index = int(image_id_index)
@@ -1393,7 +1412,7 @@ class DataProcessor():
     def get_total_numberof_model_count(self, trainer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
-        model_path = trainer.get_least_model_details(self.MODEL_DIR + "/"+ prefix)
+        model_path = trainer.get_least_model_details(self.MODEL_DIR + "/" + prefix)
         return int(model_path.split("/")[-1].replace("model-", ""))
 
     def evalfscore(self, trainer, operators, count):
@@ -1402,12 +1421,12 @@ class DataProcessor():
         self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
 
         rows = []
-        for zero_base_epoch in range(1, count+1):
+        for zero_base_epoch in range(1, count + 1):
             self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
             enable_tqdm = False
-            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(zero_base_epoch)
-            self._internal_validate_fscore_wo_pred_file( area_id,trainer, path, operators, epoch=zero_base_epoch,
-                                                         enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
+            path = self.MODEL_DIR + "/" + prefix + "/model-" + str(zero_base_epoch)
+            self._internal_validate_fscore_wo_pred_file(area_id, trainer, path, operators, epoch=zero_base_epoch,
+                                                        enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = zero_base_epoch
             evaluate_record['min_area_th'] = self.MIN_POLYGON_AREA
@@ -1427,7 +1446,7 @@ class DataProcessor():
         for th in [30, 60, 90, 120, 150, 180, 210, 240]:
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
-            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
+            path = self.MODEL_DIR + "/" + prefix + "/model-" + str(best_epoch)
             self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=th)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
@@ -1449,7 +1468,7 @@ class DataProcessor():
         for zero_base_epoch in range(1, count + 1):
             self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
             enable_tqdm = False
-            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(zero_base_epoch)
+            path = self.MODEL_DIR + "/" + prefix + "/model-" + str(zero_base_epoch)
             self._internal_validate_fscore_wo_pred_file_v12(area_id, trainer, path, operators, epoch=zero_base_epoch,
                                                             enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
@@ -1471,7 +1490,7 @@ class DataProcessor():
         for th in [30, 60, 90, 120, 150, 180, 210, 240]:
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
-            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
+            path = self.MODEL_DIR + "/" + prefix + "/model-" + str(best_epoch)
             self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True,
                                            min_th=th)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
@@ -1485,7 +1504,6 @@ class DataProcessor():
 
         self.logger.info("Evaluate fscore on validation set: {} .. done".format(prefix))
 
-
     def evalfscore_v16(self, trainer, operators, count):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
@@ -1495,9 +1513,9 @@ class DataProcessor():
         for zero_base_epoch in range(1, count + 1):
             self.logger.info(">>> Epoch: {}".format(zero_base_epoch))
             enable_tqdm = False
-            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(zero_base_epoch)
+            path = self.MODEL_DIR + "/" + prefix + "/model-" + str(zero_base_epoch)
             self._internal_validate_fscore_wo_pred_file_v16(area_id, trainer, path, operators, epoch=zero_base_epoch,
-                                                        enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
+                                                            enable_tqdm=True, min_th=self.MIN_POLYGON_AREA)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = zero_base_epoch
             evaluate_record['min_area_th'] = self.MIN_POLYGON_AREA
@@ -1517,7 +1535,7 @@ class DataProcessor():
         for th in [30, 60, 90, 120, 150, 180, 210, 240]:
             self.logger.info(">>> TH: {}".format(th))
             predict_flag = True
-            path = self.MODEL_DIR + "/"+ prefix + "/model-" + str(best_epoch)
+            path = self.MODEL_DIR + "/" + prefix + "/model-" + str(best_epoch)
             self._internal_validate_fscore(area_id, trainer, path, operators, epoch=3, predict=True, min_th=th)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['zero_base_epoch'] = best_epoch
@@ -1561,7 +1579,7 @@ class DataProcessor():
                 if len(df_poly) > 0:
                     for i, row in df_poly.iterrows():
                         line = "{},{},\"{}\",{:.6f}\n".format(
-                            prefix+'_img'+str(image_id[0]),
+                            prefix + '_img' + str(image_id[0]),
                             row.bid,
                             row.wkt,
                             row.area_ratio)
@@ -1593,7 +1611,7 @@ class DataProcessor():
                     f.write("{},{},\"{}\",{:.6f}\n".format(r.ImageId, r.BuildingId, r.PolygonWKT_Pix, 1.0))
 
     def _internal_validate_fscore_v16(self, area_id, trainer, path, operators, epoch=3, predict=True, min_th=30,
-                                  enable_tqdm=False):
+                                      enable_tqdm=False):
         prefix = self.area_id_to_prefix(area_id)
         # Prediction phase
         self.logger.info("Prediction phase")
@@ -1627,10 +1645,10 @@ class DataProcessor():
                 pos_i = int(slice_pos % 3)
                 x0 = self.STRIDE_SZ * pos_i
                 y0 = self.STRIDE_SZ * pos_j
-                pred_values[x0:x0+self.INPUT_SIZE, y0:y0+self.INPUT_SIZE] += (
+                pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (
                     y_pred[slice_idx][0]
                 )
-                pred_count[x0:x0+self.INPUT_SIZE, y0:y0+self.INPUT_SIZE] += 1
+                pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1
             pred_values = pred_values / pred_count
 
             df_poly = self.mask_to_poly(pred_values, min_polygon_area_th=min_th)
@@ -1672,7 +1690,7 @@ class DataProcessor():
         prefix = self.area_id_to_prefix(area_id)
         truth_file = self.FMT_VALTESTTRUTH_PATH.format(prefix)
         poly_file = self.FMT_VALTESTPOLY_PATH.format(prefix)
-        executable_setup = self.ROOT_DIR +  '/train/visualizer-2.0/visualizer.jar'
+        executable_setup = self.ROOT_DIR + '/train/visualizer-2.0/visualizer.jar'
         band_info = self.ROOT_DIR + '/train/visualizer-2.0/data/band-triplets.txt'
         cmd = [
             'java',
@@ -1810,7 +1828,7 @@ class DataProcessor():
                     1.0))
 
     def _internal_validate_fscore_wo_pred_file_v12(self, area_id, trainer, path, operators, epoch=3, min_th=30,
-                                               enable_tqdm=False):
+                                                   enable_tqdm=False):
         prefix = self.area_id_to_prefix(area_id)
 
         # Prediction phase
@@ -1838,7 +1856,7 @@ class DataProcessor():
                     pos_i = int(slice_pos % 3)
                     x0 = self.STRIDE_SZ * pos_i
                     y0 = self.STRIDE_SZ * pos_j
-                    mask_pred = skimage.transform.resize(y_pred[slice_idx][0], (256,256))
+                    mask_pred = skimage.transform.resize(y_pred[slice_idx][0], (256, 256))
                     pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (mask_pred)
                     pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1
                 pred_values = pred_values / pred_count
@@ -1882,10 +1900,9 @@ class DataProcessor():
                     r.BuildingId,
                     r.PolygonWKT_Pix,
                     1.0))
-
 
     def _internal_validate_fscore_wo_pred_file_v16(self, area_id, trainer, path, operators, epoch=3, min_th=30,
-                                               enable_tqdm=False):
+                                                   enable_tqdm=False):
         prefix = self.area_id_to_prefix(area_id)
 
         # Prediction phase
@@ -1913,7 +1930,7 @@ class DataProcessor():
                     pos_i = int(slice_pos % 3)
                     x0 = self.STRIDE_SZ * pos_i
                     y0 = self.STRIDE_SZ * pos_j
-                    mask_pred = skimage.transform.resize(y_pred[slice_idx][0], (256,256))
+                    mask_pred = skimage.transform.resize(y_pred[slice_idx][0], (256, 256))
                     pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (mask_pred)
                     pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1
                 pred_values = pred_values / pred_count
@@ -1957,7 +1974,6 @@ class DataProcessor():
                     r.BuildingId,
                     r.PolygonWKT_Pix,
                     1.0))
-
 
     def mask_to_poly(self, mask, min_polygon_area_th=30):
         """
@@ -2117,7 +2133,6 @@ class DataProcessor():
 
             with open(fn_osm, 'wb') as f:
                 pickle.dump(geom_layers, f)
-
 
     def preproc_train_v3(self):
         """ train.sh """
@@ -2297,7 +2312,7 @@ class DataProcessor():
                     plt.imshow(values)
                     masks = []  # rasterize masks
                     fig, ax1 = plt.subplots(1, 5, sharey=True, figsize=(5, 5))
-                    cou=0
+                    cou = 0
                     for layer_geoms in layers:
                         mask = rasterio.features.rasterize(
                             layer_geoms,
@@ -2309,8 +2324,7 @@ class DataProcessor():
                         ax1[cou].imshow(drawrgbonly1, aspect="auto")
                         ax1[cou].xaxis.set_visible(False)
                         ax1[cou].yaxis.set_visible(False)
-                        cou=cou+1
-
+                        cou = cou + 1
 
                         masks.append(mask)
                     masks = np.array(masks)
@@ -2400,7 +2414,6 @@ class DataProcessor():
         # DONE!
         self.logger.info("Preproc for training on {} ... done".format(prefix))
 
-
     def preproc_train_v2(self):
         """ train.sh """
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
@@ -2462,7 +2475,7 @@ class DataProcessor():
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info(">> validate sub-command: {}".format(prefix))
-        model_path=self.MODEL_DIR + "/" + prefix
+        model_path = self.MODEL_DIR + "/" + prefix
         if not Path(model_path).exists():
             Path(model_path).mkdir(parents=True)
         self.logger.info("load valtrain")
@@ -2474,14 +2487,13 @@ class DataProcessor():
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
         prefix = self.area_id_to_prefix(area_id)
         self.logger.info(">> validate sub-command: {}".format(prefix))
-        model_path=self.MODEL_DIR + "/" + prefix
+        model_path = self.MODEL_DIR + "/" + prefix
         df_evalhist = pd.read_csv(self.FMT_VALMODEL_EVALHIST.format(prefix))
         best_row = df_evalhist.sort_values(by='fscore', ascending=False).iloc[0]
         best_epoch = int(best_row.zero_base_epoch)
         path = self.MODEL_DIR + "/" + prefix + "/model-" + str(best_epoch)
         self.logger.info("load valtrain")
         return trainer.testor(path, operators)
-
 
     def generate_valtest_batch(self, writer):
         area_id = self.directory_name_to_area_id(self.DATA_PATH)
@@ -2506,27 +2518,27 @@ class DataProcessor():
         with tb.open_file(fn_im, 'r') as f_im, \
                 tb.open_file(fn_osm, 'r') as f_osm, \
                 tb.open_file(fn_mask, 'r') as f_mask:
-                    for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
-                        for slice_pos in range(9):
-                            slice_id = image_id + "_" + str(slice_pos)
-                            im = np.array(f_im.get_node('/' + slice_id))
-                            im = np.swapaxes(im, 0, 2)
-                            im = np.swapaxes(im, 1, 2)
-                            im2 = np.array(f_osm.get_node('/' + slice_id))
-                            im2 = np.swapaxes(im2, 0, 2)
-                            im2 = np.swapaxes(im2, 1, 2)
+            for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
+                for slice_pos in range(9):
+                    slice_id = image_id + "_" + str(slice_pos)
+                    im = np.array(f_im.get_node('/' + slice_id))
+                    im = np.swapaxes(im, 0, 2)
+                    im = np.swapaxes(im, 1, 2)
+                    im2 = np.array(f_osm.get_node('/' + slice_id))
+                    im2 = np.swapaxes(im2, 0, 2)
+                    im2 = np.swapaxes(im2, 1, 2)
 
-                            im = np.vstack([im, im2])
-                            im =  im - immean
-                            ## TODO remove transform into swap
-                            im = np.transpose(im).astype(np.float64)
-                            mask = np.array(f_mask.get_node('/' + slice_id))
-                            mask = (mask > 0).astype(np.uint8)
+                    im = np.vstack([im, im2])
+                    im = im - immean
+                    ## TODO remove transform into swap
+                    im = np.transpose(im).astype(np.float64)
+                    mask = np.array(f_mask.get_node('/' + slice_id))
+                    mask = (mask > 0).astype(np.uint8)
 
-                            image_id_prefix = prefix + "_img"
-                            image_id_index = image_id.replace(image_id_prefix, "")
-                            image_id_index = int(image_id_index)
-                            self.createRFRecoad(im, mask, image_id_index, writer)
+                    image_id_prefix = prefix + "_img"
+                    image_id_index = image_id.replace(image_id_prefix, "")
+                    image_id_index = int(image_id_index)
+                    self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
         self.logger.info("TFRecoad for validating for v16 images have been written to "
                          + self.tfrecords_filename_multi_train)
@@ -2555,27 +2567,27 @@ class DataProcessor():
         with tb.open_file(fn_im, 'r') as f_im, \
                 tb.open_file(fn_osm, 'r') as f_osm, \
                 tb.open_file(fn_mask, 'r') as f_mask:
-                    for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
-                        for slice_pos in range(9):
-                            slice_id = image_id + "_" + str(slice_pos)
-                            im = np.array(f_im.get_node('/' + slice_id))
-                            im = np.swapaxes(im, 0, 2)
-                            im = np.swapaxes(im, 1, 2)
-                            im2 = np.array(f_osm.get_node('/' + slice_id))
-                            im2 = np.swapaxes(im2, 0, 2)
-                            im2 = np.swapaxes(im2, 1, 2)
+            for idx, image_id in tqdm.tqdm(enumerate(df_train.ImageId.tolist())):
+                for slice_pos in range(9):
+                    slice_id = image_id + "_" + str(slice_pos)
+                    im = np.array(f_im.get_node('/' + slice_id))
+                    im = np.swapaxes(im, 0, 2)
+                    im = np.swapaxes(im, 1, 2)
+                    im2 = np.array(f_osm.get_node('/' + slice_id))
+                    im2 = np.swapaxes(im2, 0, 2)
+                    im2 = np.swapaxes(im2, 1, 2)
 
-                            im = np.vstack([im, im2])
-                            im =  im - immean
-                            ## TODO remove transform into swap
-                            im = np.transpose(im).astype(np.float64)
-                            mask = np.array(f_mask.get_node('/' + slice_id))
-                            mask = (mask > 0).astype(np.uint8)
+                    im = np.vstack([im, im2])
+                    im = im - immean
+                    ## TODO remove transform into swap
+                    im = np.transpose(im).astype(np.float64)
+                    mask = np.array(f_mask.get_node('/' + slice_id))
+                    mask = (mask > 0).astype(np.uint8)
 
-                            image_id_prefix = prefix + "_img"
-                            image_id_index = image_id.replace(image_id_prefix, "")
-                            image_id_index = int(image_id_index)
-                            self.createRFRecoad(im, mask, image_id_index, writer)
+                    image_id_prefix = prefix + "_img"
+                    image_id_index = image_id.replace(image_id_prefix, "")
+                    image_id_index = int(image_id_index)
+                    self.createRFRecoad(im, mask, image_id_index, writer)
         writer.close()
         self.logger.info("TFRecoad for validating for v16 images have been written to "
                          + self.tfrecords_filename_multi_test)
@@ -2666,15 +2678,15 @@ class DataProcessor():
         prefix = self.area_id_to_prefix(area_id)
         param = self._get_model_parameter(area_id, model_name)
         epoch = param['fn_epoch']
-        path = self.MODEL_DIR +"/"+prefix + "/model-" + str(epoch)
+        path = self.MODEL_DIR + "/" + prefix + "/model-" + str(epoch)
         y_pred, images_ids = self._internal_validate_predict(trainer, path, operators)
         return y_pred, images_ids
 
     def _internal_validate_predict_best_param_for_all(self, area_id,
-                                              save_pred=True,
-                                              enable_tqdm=False,
-                                              rescale_pred_list=[],
-                                              slice_pred_list=[]):
+                                                      save_pred=True,
+                                                      enable_tqdm=False,
+                                                      rescale_pred_list=[],
+                                                      slice_pred_list=[]):
         prefix = self.area_id_to_prefix(area_id)
 
         # Load valtest imagelist
@@ -2692,7 +2704,7 @@ class DataProcessor():
                 x0 = self.STRIDE_SZ * pos_i
                 y0 = self.STRIDE_SZ * pos_j
                 for slice_pred in slice_pred_list:
-                    #TODO FIX THIS RESISING PROBLEM
+                    # TODO FIX THIS RESISING PROBLEM
                     mask_a = skimage.transform.resize(slice_pred[slice_idx][0], (256, 256))
                     pred_values[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += (mask_a)
                     pred_count[x0:x0 + self.INPUT_SIZE, y0:y0 + self.INPUT_SIZE] += 1
@@ -2709,8 +2721,8 @@ class DataProcessor():
         return pred_values_array
 
     def _internal_pred_to_poly_file_final(self, area_id,
-                                    y_pred,
-                                    min_th=30):
+                                          y_pred,
+                                          min_th=30):
         """
         Write out valtest poly and truepoly
         """
@@ -2774,7 +2786,7 @@ class DataProcessor():
         self.logger.info("Evaluate fscore on validation set: {}".format(prefix))
         self.logger.info("Averaging")
         y_pred = self._internal_validate_predict_best_param_for_all(area_id, rescale_pred_list=[y_pred_0],
-            slice_pred_list=[y_pred_1, y_pred_2])
+                                                                    slice_pred_list=[y_pred_1, y_pred_2])
 
         fn_out = self.FMT_VALTESTPOLY_PATH.format(prefix)
         if not Path(fn_out).parent.exists():
@@ -2785,7 +2797,7 @@ class DataProcessor():
         for th in [30, 60, 90, 120, 150, 180, 210, 240]:
             self.logger.info(">>> TH: {}".format(th))
             # predict_flag = True
-            self._internal_pred_to_poly_file_final( area_id, y_pred, min_th=th)
+            self._internal_pred_to_poly_file_final(area_id, y_pred, min_th=th)
             evaluate_record = self._calc_fscore_per_aoi(area_id)
             evaluate_record['min_area_th'] = th
             evaluate_record['area_id'] = area_id
@@ -2797,7 +2809,7 @@ class DataProcessor():
 
     def get_model(self, type_of_data):
 
-        model_name = "model_"+self.MODEL_NAME
+        model_name = "model_" + self.MODEL_NAME
         batch_size_for_training = int(self.plugin_config[model_name]["train"]["batch_size"])
         training_epochs = int(self.plugin_config[model_name]["train"]["epochs"])
         batch_size_for_validating = int(self.plugin_config[model_name]["validate"]["batch_size"])
@@ -2832,10 +2844,9 @@ class DataProcessor():
                                  loader_train=queue_loader_train, loader_test=queue_loader_validate)
         return net, trainer, operators
 
-
     def get_test_model(self, type_of_data):
 
-        model_name = "model_"+self.MODEL_NAME
+        model_name = "model_" + self.MODEL_NAME
         batch_size_for_testing = int(self.plugin_config[model_name]["test"]["batch_size"])
         testing_epochs = int(self.plugin_config[model_name]["test"]["epochs"])
         additianl_channals = 0
@@ -2853,14 +2864,13 @@ class DataProcessor():
                                verification_batch_size=1)
 
         queue_loader_test = QueueLoader(self.plugin_config_dir, self, type=type_of_data,
-                                             batch_size=batch_size_for_testing,
-                                             additianl_channals=additianl_channals, num_epochs=testing_epochs,
-                                             train=False, test=True)
+                                        batch_size=batch_size_for_testing,
+                                        additianl_channals=additianl_channals, num_epochs=testing_epochs,
+                                        train=False, test=True)
 
         place_holder = namedtuple('modelTest', 'test_dataset loader_test')
         operators = place_holder(test_dataset=generator_test, loader_test=queue_loader_test)
         return net, trainer, operators
-
 
     def execute(self):
         self.logger.addHandler(self.handler)
@@ -2870,7 +2880,6 @@ class DataProcessor():
             Path(self.MODEL_DIR).mkdir(parents=True)
         if not Path(self.IMAGE_DIR).exists():
             Path(self.IMAGE_DIR).mkdir(parents=True)
-
 
 # plugin_config = "/home/geesara/project/satelliteimageclassifier/config/config.json"
 # dataprocessor = DataProcessor(plugin_config)
